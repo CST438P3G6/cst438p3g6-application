@@ -8,16 +8,19 @@ import { Session } from '@supabase/supabase-js';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const getSession = async () => {
       try {
+        if (Platform.OS === 'web' && typeof window === 'undefined') return;
+        
         if (Platform.OS === 'web') {
           console.log('web');
           const { data: { session } } = await supabase.auth.getSession();
           setSession(session);
         } else {
-          console.log('not web');
+          console.log('mobile');
           const storedSession = await AsyncStorage.getItem('supabase.auth.token');
           if (storedSession) {
             const parsedSession = JSON.parse(storedSession);
@@ -27,15 +30,14 @@ export default function App() {
             setSession(session);
           }
         }
+        setIsReady(true);
       } catch (error) {
         console.error('Error retrieving session:', error);
       }
     };
 
-    // Initial session retrieval
     getSession();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (Platform.OS !== 'web') {
@@ -51,6 +53,10 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []);
+
+  if (!isReady) {
+    return null; 
+  }
 
   return (
     <View>
