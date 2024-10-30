@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import Auth from '../../components/Auth';
 import Account from '../../components/Account';
-import { View, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
+import {View, Platform, Button} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Session } from '@supabase/supabase-js';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const getSession = async () => {
@@ -61,6 +63,11 @@ export default function App() {
   return (
     <View>
       {session && session.user ? <Account key={session.user.id} session={session} /> : <Auth />}
+
+      <Button title="Go to CreateBusinessTest" onPress={() => router.push('/CreateBusinessTest')} />
+
+      <Button title="Go to UsersTest" onPress={() => router.push('/Userstest')} />
+
     </View>
   );
 }
