@@ -2,7 +2,7 @@
   "hostType": "lan",
   "lanType": "ip",
   "dev": true,
-  "minify": false,
+  "minify": true,
   "urlRandomness": null,
   "https": false
 }
