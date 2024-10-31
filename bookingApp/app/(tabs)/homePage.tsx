@@ -1,11 +1,13 @@
 import React from 'react';
+import { View } from 'react-native';
+import { Text } from '@/components/ui/text'; 
 
-const HomePage: React.FC = () => {
+function HomePage() {
   return (
-    <div>
-      <h1>Welcome to the HomePage</h1>
-    </div>
+    <View>
+      <Text >Welcome to the Home Page</Text>
+    </View>
   );
-};
+}
 
 export default HomePage;
