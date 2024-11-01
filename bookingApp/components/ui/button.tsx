@@ -61,7 +61,7 @@ type ButtonProps = React.ComponentPropsWithoutRef<typeof Pressable> &
   VariantProps<typeof buttonVariants>;
 
 const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
+  ({ className, variant, size, style, ...props }, ref) => {
     return (
       <TextClassContext.Provider
         value={buttonTextVariants({ variant, size, className: 'web:pointer-events-none' })}
@@ -73,6 +73,7 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
           )}
           ref={ref}
           role='button'
+          style={[...(Array.isArray(style) ? style : [style]), props.disabled && { pointerEvents: 'none' }]}
           {...props}
         />
       </TextClassContext.Provider>

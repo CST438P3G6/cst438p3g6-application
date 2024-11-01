@@ -1,15 +1,15 @@
 import React from 'react';
 import { View } from 'react-native';
 import { Text } from '@/components/ui/text'; 
-import { Home as HomeIcon } from 'lucide-react-native';
+import { Briefcase as BusinessIcon } from 'lucide-react-native';
 
-function Home() {
+function Business() {
   return (
     <View className='flex-1 justify-center'>
-      <HomeIcon />
-      <Text>Welcome to the Home Page</Text>
+      <BusinessIcon />
+      <Text>Business Page</Text>
     </View>
   );
 }
 
-export default Home;
+export default Business;
