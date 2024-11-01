@@ -54,7 +54,7 @@ export default function RootLayout() {
                 <Tabs.Screen name="Account" component={AccountPage} options={{ title: 'Account' }} />
                 <Tabs.Screen name="ConfigureBusiness" component={ConfigureBusinessPage} options={{ title: 'Configure Business' }} />
                 <Tabs.Screen name="ViewProfiles" component={ViewProfiles} options={{ title: 'View Profiles' }} />
-                <Tabs.Screen name="ViewLoggedInUserProfile" component={ViewProfiles} options={{ title: 'View Logged In User Profile' }} />
+                <Tabs.Screen name="ViewLoggedInUserProfile" component={ViewLoggedInUserProfile} options={{ title: 'View Logged In User Profile' }} />
             </Tabs.Navigator>
         </GestureHandlerRootView>
     );
