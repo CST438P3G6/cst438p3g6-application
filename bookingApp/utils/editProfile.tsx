@@ -48,7 +48,7 @@ export default function EditProfile() {
         };
 
         fetchProfile();
-    }, []);
+    }, []); // Add an empty dependency array to run only once
 
     const handleUpdateProfile = async () => {
         if (!profile) return;

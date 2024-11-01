@@ -1,8 +1,6 @@
 import React, { useEffect } from 'react';
-import { createClient, PostgrestError } from '@supabase/supabase-js';
-import {supabase} from "@/utils/supabase";
-
-
+import { PostgrestError } from '@supabase/supabase-js';
+import { supabase } from '@/utils/supabase';
 
 // Define the Profile type based on your 'profiles' table structure
 type Profile = {
@@ -36,7 +34,7 @@ export default function AllProfiles({ onDataFetched }: AllProfilesProps) {
         };
 
         fetchData();
-    }, [onDataFetched]);
+    }, []); // Add an empty dependency array to run only once
 
     // Return nothing from this component as it's meant to fetch data
     return null;
