@@ -1,37 +1,59 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import '~/global.css';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Theme, ThemeProvider } from '@react-navigation/native';
+import { SplashScreen, Slot } from 'expo-router';
+import * as React from 'react';
+import { Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { NAV_THEME } from '~/lib/constants';
+import { useColorScheme } from '~/lib/useColorScheme';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+const LIGHT_THEME: Theme = {
+  dark: false,
+  colors: NAV_THEME.light,
+};
+const DARK_THEME: Theme = {
+  dark: true,
+  colors: NAV_THEME.dark,
+};
+
+export {
+  ErrorBoundary,
+} from 'expo-router';
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const { colorScheme, setColorScheme, isDarkColorScheme } = useColorScheme();
+  const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
 
-  useEffect(() => {
-    if (loaded) {
+  React.useEffect(() => {
+    (async () => {
+      const theme = await AsyncStorage.getItem('theme');
+      if (Platform.OS === 'web') {
+        document.documentElement.classList.add('bg-background');
+      }
+      const colorTheme = theme === 'dark' ? 'dark' : 'light';
+      setColorScheme(colorTheme);
+      if (!theme) {
+        AsyncStorage.setItem('theme', colorTheme);
+      }
+    })().finally(() => {
       SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+      setIsColorSchemeLoaded(true);
+    });
+  }, []);
 
-  if (!loaded) {
+  if (!isColorSchemeLoaded) {
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+    <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Slot />
+      </GestureHandlerRootView>
     </ThemeProvider>
   );
 }
