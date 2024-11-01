@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { createClient, PostgrestError } from '@supabase/supabase-js';
+import {supabase} from "@/utils/supabase";
 
-// Initialize Supabase client
-const supabase = createClient('https://qzjdgcbsxquaujrbtluy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6amRnY2JzeHF1YXVqcmJ0bHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAyMjcxMDQsImV4cCI6MjA0NTgwMzEwNH0.bsGIrdXSs8iojPX94DxK3bXuPrzE0Ojr7WPlFY__2Sc');
+
 
 // Define the Profile type based on your 'profiles' table structure
 type Profile = {

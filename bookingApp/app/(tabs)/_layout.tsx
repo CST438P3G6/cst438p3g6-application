@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home as HomeIcon, Settings as SettingsIcon, Briefcase as BusinessIcon, Calendar as AppointmentsIcon, User as AccountIcon, FileSliders as ConfigureBusinessIcon } from 'lucide-react-native';
+import { Home as HomeIcon, Settings as SettingsIcon, Briefcase as BusinessIcon, Calendar as AppointmentsIcon, User as AccountIcon, FileSliders as ConfigureBusinessIcon, Edit as EditProfileIcon } from 'lucide-react-native';
 
 import HomePage from './homePage';
 import SettingsPage from './settingsPage';
@@ -13,6 +13,7 @@ import AccountPage from './accountPage';
 import ConfigureBusinessPage from './configureBusinessPage';
 import ViewProfiles from './viewProfiles';
 import ViewLoggedInUserProfile from "@/app/(tabs)/viewLoggedInUserProfile";
+import EditProfileForm from "@/app/(tabs)/editProfile";
 
 const Tabs = createBottomTabNavigator();
 
@@ -40,6 +41,8 @@ export default function RootLayout() {
                                 return <AccountIcon color={color} size={size} />;
                             case 'ViewLoggedInUserProfile':
                                 return <AccountIcon color={color} size={size} />;
+                            case 'EditProfile':
+                                return <EditProfileIcon color={color} size={size} />;
                             default:
                                 return null;
                         }
@@ -55,6 +58,7 @@ export default function RootLayout() {
                 <Tabs.Screen name="ConfigureBusiness" component={ConfigureBusinessPage} options={{ title: 'Configure Business' }} />
                 <Tabs.Screen name="ViewProfiles" component={ViewProfiles} options={{ title: 'View Profiles' }} />
                 <Tabs.Screen name="ViewLoggedInUserProfile" component={ViewLoggedInUserProfile} options={{ title: 'View Logged In User Profile' }} />
+                <Tabs.Screen name="EditProfile" component={EditProfileForm} options={{ title: 'Edit Profile' }} />
             </Tabs.Navigator>
         </GestureHandlerRootView>
     );
