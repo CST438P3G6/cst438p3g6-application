@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
 
@@ -19,30 +20,32 @@ type LoggedInUserProfileProps = {
 };
 
 export default function LoggedInUserProfile({ onDataFetched }: LoggedInUserProfileProps) {
-    useEffect(() => {
-        const fetchData = async () => {
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            if (userError) {
-                onDataFetched(null, userError.message);
-                return;
-            }
+    useFocusEffect(
+        useCallback(() => {
+            const fetchData = async () => {
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                if (userError) {
+                    onDataFetched(null, userError.message);
+                    return;
+                }
 
-            const { data, error }: { data: Profile | null; error: PostgrestError | null } = await supabase
-                .from('profiles')
-                .select()
-                .eq('id', user?.id)
-                .single();
+                const { data, error }: { data: Profile | null; error: PostgrestError | null } = await supabase
+                    .from('profiles')
+                    .select()
+                    .eq('id', user?.id)
+                    .single();
 
-            // Pass data and error back to the parent component
-            if (error) {
-                onDataFetched(null, error.message);
-            } else {
-                onDataFetched(data, null);
-            }
-        };
+                // Pass data and error back to the parent component
+                if (error) {
+                    onDataFetched(null, error.message);
+                } else {
+                    onDataFetched(data, null);
+                }
+            };
 
-        fetchData();
-    }, []); // Add an empty dependency array to run only once
+            fetchData();
+        }, [])
+    );
 
     // Return nothing from this component as it's meant to fetch data
     return null;

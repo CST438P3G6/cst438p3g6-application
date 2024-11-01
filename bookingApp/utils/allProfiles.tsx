@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
 
@@ -19,22 +20,24 @@ type AllProfilesProps = {
 };
 
 export default function AllProfiles({ onDataFetched }: AllProfilesProps) {
-    useEffect(() => {
-        const fetchData = async () => {
-            const { data, error }: { data: Profile[] | null; error: PostgrestError | null } = await supabase
-                .from('profiles')
-                .select();
+    useFocusEffect(
+        useCallback(() => {
+            const fetchData = async () => {
+                const { data, error }: { data: Profile[] | null; error: PostgrestError | null } = await supabase
+                    .from('profiles')
+                    .select();
 
-            // Pass data and error back to the parent component
-            if (error) {
-                onDataFetched(null, error.message);
-            } else {
-                onDataFetched(data, null);
-            }
-        };
+                // Pass data and error back to the parent component
+                if (error) {
+                    onDataFetched(null, error.message);
+                } else {
+                    onDataFetched(data, null);
+                }
+            };
 
-        fetchData();
-    }, []); // Add an empty dependency array to run only once
+            fetchData();
+        }, [])
+    );
 
     // Return nothing from this component as it's meant to fetch data
     return null;
