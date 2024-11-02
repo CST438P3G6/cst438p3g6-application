@@ -1,11 +1,9 @@
 import React from 'react';
-// @ts-ignore
-import { View, Text, TextInput, Button, StyleSheet, CheckBox } from 'react-native';
-import EditProfile from '@/utils/editProfile';
+import { View, Text, TextInput, Button, StyleSheet, Switch, ActivityIndicator } from 'react-native';
+import useEditProfile from "@/hooks/useEditProfile"; // Update the path to match your hook
 
 const EditProfileForm: React.FC = () => {
     const {
-
         loading,
         firstName,
         setFirstName,
@@ -16,10 +14,10 @@ const EditProfileForm: React.FC = () => {
         isProvider,
         setIsProvider,
         handleUpdateProfile,
-    } = EditProfile();
+    } = useEditProfile();
 
     if (loading) {
-        return <Text>Loading...</Text>;
+        return <ActivityIndicator size="large" color="#0000ff" />;
     }
 
     return (
@@ -41,9 +39,10 @@ const EditProfileForm: React.FC = () => {
                 style={styles.input}
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
             />
             <View style={styles.checkboxContainer}>
-                <CheckBox
+                <Switch
                     value={isProvider}
                     onValueChange={setIsProvider}
                 />

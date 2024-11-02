@@ -1,60 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
-import { fetchUserBusinesses } from '@/utils/viewUserBusinesses';
-import LoggedInUserProfile from '@/utils/loggedInUserProfile';
-
-type Profile = {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone_number: string;
-    isadmin: boolean;
-    isprovider: boolean;
-    is_active: boolean;
-};
-
-type Business = {
-    id: string;
-    name: string;
-    description: string;
-    phone_number: string;
-    address: string;
-    user_id: string;
-    is_active: boolean;
-    email: string;
-};
+import React from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { useLoggedInUserProfile} from "@/hooks/useLoggedInUserProfile";
+import { useUserBusinesses} from "@/hooks/useUserBusiness";
 
 export default function ViewUserBusinessesPage() {
-    const [profile, setProfile] = useState<Profile | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [businesses, setBusinesses] = useState<Business[]>([]);
-
-    const handleDataFetched = (fetchedData: Profile | null, fetchError: string | null) => {
-        setProfile(fetchedData);
-        setError(fetchError);
-    };
-
-    useEffect(() => {
-        const fetchBusinesses = async () => {
-            if (profile) {
-                const { data, error } = await fetchUserBusinesses(profile.id);
-                if (error) {
-                    Alert.alert('Error fetching businesses', error.message);
-                } else {
-                    setBusinesses(data || []);
-                }
-            }
-        };
-
-        fetchBusinesses();
-    }, [profile]);
+    const { profile, error: profileError } = useLoggedInUserProfile();
+    const { businesses, loading, error: businessesError } = useUserBusinesses(profile?.id || null);
 
     return (
         <View style={styles.container}>
-            <LoggedInUserProfile onDataFetched={handleDataFetched} />
-            {error ? (
-                <Text style={styles.errorText}>Error: {error}</Text>
+            {profileError ? (
+                <Text style={styles.errorText}>Error: {profileError}</Text>
+            ) : businessesError ? (
+                <Text style={styles.errorText}>Error: {businessesError}</Text>
+            ) : loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
             ) : (
                 <FlatList
                     data={businesses}

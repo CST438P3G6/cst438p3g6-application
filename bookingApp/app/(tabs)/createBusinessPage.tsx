@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { createBusiness } from '@/utils/createBusiness';
+import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { useCreateBusiness } from "@/hooks/useCreateBusiness";
 
 export default function CreateBusinessPage() {
     const [businessName, setBusinessName] = useState('');
@@ -10,6 +10,8 @@ export default function CreateBusinessPage() {
     const [email, setEmail] = useState('');
     const [isActive, setIsActive] = useState(true);
 
+    const { createBusiness, loading, error: createError } = useCreateBusiness();
+
     const handleCreateBusiness = async () => {
         if (!businessName || !description || !address || !phoneNumber || !email) {
             Alert.alert('Please fill in all fields');
@@ -18,17 +20,17 @@ export default function CreateBusinessPage() {
 
         const newBusiness = {
             name: businessName,
-            description: description,
-            address: address,
+            description,
+            address,
             phone_number: phoneNumber,
-            email: email,
+            email,
             is_active: isActive,
         };
 
-        const { data, error } = await createBusiness(newBusiness);
+        const result = await createBusiness(newBusiness);
 
-        if (error) {
-            Alert.alert('Error creating business', error.message);
+        if (result.error) {
+            Alert.alert('Error creating business', result.error);
         } else {
             Alert.alert('Business created successfully');
             // Clear form fields
@@ -73,7 +75,12 @@ export default function CreateBusinessPage() {
                 value={email}
                 onChangeText={setEmail}
             />
-            <Button title="Create Business" onPress={handleCreateBusiness} />
+            {createError && <Text style={styles.errorText}>Error: {createError}</Text>}
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+                <Button title="Create Business" onPress={handleCreateBusiness} />
+            )}
         </View>
     );
 }

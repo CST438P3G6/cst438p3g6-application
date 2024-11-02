@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
@@ -15,11 +15,10 @@ type Profile = {
     is_active: boolean;
 };
 
-type AllProfilesProps = {
-    onDataFetched: (data: Profile[] | null, error: string | null) => void;
-};
+export default function useAllProfiles() {
+    const [data, setData] = useState<Profile[] | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-export default function AllProfiles({ onDataFetched }: AllProfilesProps) {
     useFocusEffect(
         useCallback(() => {
             const fetchData = async () => {
@@ -27,11 +26,12 @@ export default function AllProfiles({ onDataFetched }: AllProfilesProps) {
                     .from('profiles')
                     .select();
 
-                // Pass data and error back to the parent component
                 if (error) {
-                    onDataFetched(null, error.message);
+                    setError(error.message);
+                    setData(null);
                 } else {
-                    onDataFetched(data, null);
+                    setData(data);
+                    setError(null);
                 }
             };
 
@@ -39,6 +39,5 @@ export default function AllProfiles({ onDataFetched }: AllProfilesProps) {
         }, [])
     );
 
-    // Return nothing from this component as it's meant to fetch data
-    return null;
+    return { data, error };
 }

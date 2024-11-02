@@ -1,41 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
-import { fetchAllBusinesses} from "@/utils/viewAllBusinesses";
-
-type Business = {
-    id: string;
-    name: string;
-    description: string;
-    phone_number: string;
-    address: string;
-    user_id: string;
-    is_active: boolean;
-    email: string;
-};
+import React from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { useAllBusinesses} from "@/hooks/useAllBusinesses";
 
 export default function ViewAllBusinessesPage() {
-    const [businesses, setBusinesses] = useState<Business[]>([]);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        const fetchBusinesses = async () => {
-            const { data, error } = await fetchAllBusinesses();
-            if (error) {
-                setError(error.message);
-                Alert.alert('Error fetching businesses', error.message);
-            } else {
-                setBusinesses(data || []);
-            }
-        };
-
-        fetchBusinesses();
-    }, []);
+    const { businesses, loading, error } = useAllBusinesses();
 
     return (
         <View style={styles.container}>
-            {error ? (
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : error ? (
                 <Text style={styles.errorText}>Error: {error}</Text>
-            ) : (
+            ) : businesses ? (
                 <FlatList
                     data={businesses}
                     keyExtractor={(item) => item.id}
@@ -49,6 +25,8 @@ export default function ViewAllBusinessesPage() {
                         </View>
                     )}
                 />
+            ) : (
+                <Text style={styles.loadingText}>No businesses found</Text>
             )}
         </View>
     );
@@ -58,10 +36,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
+        backgroundColor: '#fff',
     },
     errorText: {
         fontSize: 16,
         color: 'red',
+        textAlign: 'center',
+    },
+    loadingText: {
+        fontSize: 16,
+        textAlign: 'center',
     },
     businessItem: {
         padding: 10,

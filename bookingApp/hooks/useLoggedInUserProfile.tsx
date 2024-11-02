@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
@@ -15,17 +15,18 @@ type Profile = {
     is_active: boolean;
 };
 
-type LoggedInUserProfileProps = {
-    onDataFetched: (data: Profile | null, error: string | null) => void;
-};
+export function useLoggedInUserProfile() {
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-export default function LoggedInUserProfile({ onDataFetched }: LoggedInUserProfileProps) {
     useFocusEffect(
         useCallback(() => {
             const fetchData = async () => {
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
+
                 if (userError) {
-                    onDataFetched(null, userError.message);
+                    setError(userError.message);
+                    setProfile(null);
                     return;
                 }
 
@@ -35,11 +36,12 @@ export default function LoggedInUserProfile({ onDataFetched }: LoggedInUserProfi
                     .eq('id', user?.id)
                     .single();
 
-                // Pass data and error back to the parent component
                 if (error) {
-                    onDataFetched(null, error.message);
+                    setError(error.message);
+                    setProfile(null);
                 } else {
-                    onDataFetched(data, null);
+                    setProfile(data);
+                    setError(null);
                 }
             };
 
@@ -47,6 +49,5 @@ export default function LoggedInUserProfile({ onDataFetched }: LoggedInUserProfi
         }, [])
     );
 
-    // Return nothing from this component as it's meant to fetch data
-    return null;
+    return { profile, error };
 }

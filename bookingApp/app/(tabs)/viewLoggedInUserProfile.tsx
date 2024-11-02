@@ -1,38 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import LoggedInUserProfile from "@/utils/loggedInUserProfile";
-
-// Define the Profile type based on your 'profiles' table structure
-type Profile = {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone_number: string;
-    isadmin: boolean;
-    isprovider: boolean;
-    is_active: boolean;
-};
+import {useLoggedInUserProfile} from "@/hooks/useLoggedInUserProfile";
 
 export default function ViewLoggedInUserProfile() {
-    const [data, setData] = useState<Profile | null>(null);
-    const [error, setError] = useState<string | null>(null);
-
-    // Function to handle data when fetched
-    const handleDataFetched = (fetchedData: Profile | null, fetchError: string | null) => {
-        setData(fetchedData);
-        setError(fetchError);
-    };
+    const { profile: data, error } = useLoggedInUserProfile();
 
     return (
         <View style={styles.container}>
-            {/* Call AllProfiles and pass the data handler */}
-            <LoggedInUserProfile onDataFetched={handleDataFetched} />
-
             {error ? (
                 <Text style={styles.errorText}>Error: {error}</Text>
+            ) : data ? (
+                <View>
+                    <Text style={styles.text}>ID: {data.id}</Text>
+                    <Text style={styles.text}>Name: {data.first_name} {data.last_name}</Text>
+                    <Text style={styles.text}>Email: {data.email}</Text>
+                    <Text style={styles.text}>Phone: {data.phone_number}</Text>
+                    <Text style={styles.text}>Role: {data.isadmin ? "Admin" : "User"}</Text>
+                    <Text style={styles.text}>Status: {data.is_active ? "Active" : "Inactive"}</Text>
+                </View>
             ) : (
-                <Text style={styles.text}>{data ? JSON.stringify(data, null, 2) : 'Loading...'}</Text>
+                <Text style={styles.loadingText}>Loading...</Text>
             )}
         </View>
     );
@@ -43,13 +30,19 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        padding: 20,
     },
     text: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 16,
+        marginVertical: 4,
     },
     errorText: {
         fontSize: 16,
         color: 'red',
+        textAlign: 'center',
+    },
+    loadingText: {
+        fontSize: 16,
+        textAlign: 'center',
     },
 });

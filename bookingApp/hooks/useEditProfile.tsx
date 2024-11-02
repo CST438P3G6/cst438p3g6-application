@@ -1,9 +1,8 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
 
-// Define the Profile type based on your 'profiles' table structure
 type Profile = {
     id: string;
     first_name: string;
@@ -15,7 +14,7 @@ type Profile = {
     is_active: boolean;
 };
 
-export default function EditProfile() {
+export default function useEditProfile() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [firstName, setFirstName] = useState('');
@@ -50,7 +49,7 @@ export default function EditProfile() {
         };
 
         fetchProfile();
-    }, []); // Add an empty dependency array to run only once
+    }, []);
 
     const handleUpdateProfile = async () => {
         if (!profile) return;
