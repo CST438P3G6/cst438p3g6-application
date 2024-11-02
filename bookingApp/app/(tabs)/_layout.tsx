@@ -17,6 +17,12 @@ import EditProfileForm from "@/app/(tabs)/editProfile";
 import CreateBusinessPage from "@/app/(tabs)/createBusinessPage";
 import ViewUserBusinessesPage from "@/app/(tabs)/viewUserBusinessesPage";
 import ViewAllBusinessesPage from "@/app/(tabs)/viewAllBusinessesPage";
+import EditBusinessPage from "@/app/(tabs)/editBusinessPage";
+import CreateServicePage from "@/app/(tabs)/createServicePage";
+import ViewBusinessServicesPage from "@/app/(tabs)/viewBusinessServicesPage";
+import ViewServicePage from "@/app/(tabs)/viewServicePage";
+import EditServicePage from "@/app/(tabs)/editServicePage";
+
 
 const Tabs = createBottomTabNavigator();
 
@@ -52,6 +58,16 @@ export default function RootLayout() {
                                 return <BusinessIcon color={color} size={size} />;
                             case 'ViewAllBusinesses':
                                 return <BusinessIcon color={color} size={size} />;
+                            case 'EditBusiness':
+                                return <BusinessIcon color={color} size={size} />;
+                            case 'ViewBusinessServices':
+                                return <BusinessIcon color={color} size={size} />;
+                            case 'CreateService':
+                                return <CreateBusinessIcon color={color} size={size} />;
+                            case 'ViewService':
+                                return <BusinessIcon color={color} size={size} />;
+                            case 'EditService':
+                                return <BusinessIcon color={color} size={size} />;
                             default:
                                 return null;
                         }
@@ -71,6 +87,11 @@ export default function RootLayout() {
                 <Tabs.Screen name="CreateBusiness" component={CreateBusinessPage} options={{ title: 'Create Business' }} />
                 <Tabs.Screen name="ViewUserBusinesses" component={ViewUserBusinessesPage} options={{ title: 'View User Businesses' }} />
                 <Tabs.Screen name="ViewAllBusinesses" component={ViewAllBusinessesPage} options={{ title: 'View All Businesses' }} />
+                <Tabs.Screen name="EditBusiness" component={EditBusinessPage} options={{ title: 'Edit Business' }} />
+                <Tabs.Screen name="CreateService" component={CreateServicePage} options={{ title: 'Create Service' }} />
+                <Tabs.Screen name="ViewBusinessServices" component={ViewBusinessServicesPage} options={{ title: 'View Business Services' }} />
+                <Tabs.Screen name="ViewService" component={ViewServicePage} options={{ title: 'View Service' }} />
+                <Tabs.Screen name="EditService" component={EditServicePage} options={{ title: 'Edit Service' }} />
 
             </Tabs.Navigator>
         </GestureHandlerRootView>
