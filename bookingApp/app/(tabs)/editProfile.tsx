@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+// @ts-ignore
+import { View, Text, TextInput, Button, StyleSheet, CheckBox } from 'react-native';
 import EditProfile from '@/utils/editProfile';
 
 const EditProfileForm: React.FC = () => {
     const {
-        profile,
+
         loading,
         firstName,
         setFirstName,
@@ -12,6 +13,8 @@ const EditProfileForm: React.FC = () => {
         setLastName,
         phoneNumber,
         setPhoneNumber,
+        isProvider,
+        setIsProvider,
         handleUpdateProfile,
     } = EditProfile();
 
@@ -39,6 +42,13 @@ const EditProfileForm: React.FC = () => {
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
             />
+            <View style={styles.checkboxContainer}>
+                <CheckBox
+                    value={isProvider}
+                    onValueChange={setIsProvider}
+                />
+                <Text style={styles.label}>Is Provider</Text>
+            </View>
             <Button title="Update Profile" onPress={handleUpdateProfile} />
         </View>
     );
@@ -59,6 +69,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         marginBottom: 16,
         paddingHorizontal: 8,
+    },
+    checkboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
     },
 });
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
@@ -21,6 +21,7 @@ export default function EditProfile() {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
+    const [isProvider, setIsProvider] = useState(false);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -43,6 +44,7 @@ export default function EditProfile() {
                 setFirstName(data?.first_name || '');
                 setLastName(data?.last_name || '');
                 setPhoneNumber(data?.phone_number || '');
+                setIsProvider(data?.isprovider || false);
             }
             setLoading(false);
         };
@@ -53,18 +55,26 @@ export default function EditProfile() {
     const handleUpdateProfile = async () => {
         if (!profile) return;
 
+        const updates: Partial<Profile> = {};
+        if (firstName.trim() !== '' && firstName !== profile.first_name) updates.first_name = firstName;
+        if (lastName.trim() !== '' && lastName !== profile.last_name) updates.last_name = lastName;
+        if (phoneNumber.trim() !== '' && phoneNumber !== profile.phone_number) updates.phone_number = phoneNumber;
+        if (isProvider !== profile.isprovider) updates.isprovider = isProvider;
+
+        if (Object.keys(updates).length === 0) {
+            Alert.alert('No changes to update or fields are empty');
+            return;
+        }
+
         const { error } = await supabase
             .from('profiles')
-            .update({
-                first_name: firstName,
-                last_name: lastName,
-                phone_number: phoneNumber,
-            })
+            .update(updates)
             .eq('id', profile.id);
 
         if (error) {
             Alert.alert('Error updating profile', error.message);
         } else {
+            setProfile({ ...profile, ...updates });
             Alert.alert('Profile updated successfully');
         }
     };
@@ -78,6 +88,8 @@ export default function EditProfile() {
         setLastName,
         phoneNumber,
         setPhoneNumber,
+        isProvider,
+        setIsProvider,
         handleUpdateProfile,
     };
 }
