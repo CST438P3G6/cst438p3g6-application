@@ -8,11 +8,12 @@ const SplashScreen = () => {
 
     useEffect(() => {
         const checkUser = async () => {
+            // I think we can call the user object from asycn storage and not have this api call here. 
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 router.replace('/(tabs)/homePage');
             } else {
-                router.replace('/(auth)/authPage');
+                router.replace('/(auth)/loginPage');
             }
         };
 

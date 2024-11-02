@@ -25,24 +25,31 @@ export {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { colorScheme, setColorScheme, isDarkColorScheme } = useColorScheme();
+  const { setColorScheme, isDarkColorScheme } = useColorScheme();
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    (async () => {
-      const theme = await AsyncStorage.getItem('theme');
-      if (Platform.OS === 'web') {
-        document.documentElement.classList.add('bg-background');
+    const initializeTheme = async () => {
+      try {
+        const theme = await AsyncStorage.getItem('theme');
+        if (Platform.OS === 'web') {
+          document.documentElement.classList.add('bg-background');
+        }
+        const colorTheme = theme === 'dark' ? 'dark' : 'light';
+        setColorScheme(colorTheme);
+
+        if (!theme) {
+          await AsyncStorage.setItem('theme', colorTheme);
+        }
+      } catch (error) {
+        console.error('Error initializing theme:', error);
+      } finally {
+        await SplashScreen.hideAsync();
+        setIsColorSchemeLoaded(true);
       }
-      const colorTheme = theme === 'dark' ? 'dark' : 'light';
-      setColorScheme(colorTheme);
-      if (!theme) {
-        AsyncStorage.setItem('theme', colorTheme);
-      }
-    })().finally(() => {
-      SplashScreen.hideAsync();
-      setIsColorSchemeLoaded(true);
-    });
+    };
+
+    initializeTheme();
   }, []);
 
   if (!isColorSchemeLoaded) {
