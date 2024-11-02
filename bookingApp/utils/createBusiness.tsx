@@ -13,7 +13,7 @@ type Business = {
     email: string;
 };
 
-export async function upsertBusiness(business: Omit<Business, 'user_id'>): Promise<{ data: Business | null; error: PostgrestError | null }> {
+export async function createBusiness(business: Omit<Business, 'user_id'>): Promise<{ data: Business | null; error: PostgrestError | null }> {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
@@ -24,7 +24,7 @@ export async function upsertBusiness(business: Omit<Business, 'user_id'>): Promi
 
     const { data, error } = await supabase
         .from('business')
-        .upsert([businessWithUserId], { onConflict: 'id' })
+        .insert([businessWithUserId])
         .single();
 
     return { data, error };
