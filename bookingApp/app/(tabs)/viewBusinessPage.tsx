@@ -1,68 +1,33 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator } from 'react-native';
-import { useCreateAppointment } from '@/hooks/useCreateAppointment';
-
-export default function CreateAppointmentPage() {
-    const [serviceId, setServiceId] = useState<string>('');
-    const [userId, setUserId] = useState<string>('');
-    const [startTime, setStartTime] = useState<string>('');
-    const [error, setError] = useState<string | null>(null);
-    const { createAppointment, loading } = useCreateAppointment();
-
-    const handleCreateAppointment = async () => {
-        // Validate startTime
-        const startDate = new Date(startTime);
-        if (isNaN(startDate.getTime())) {
-            setError('Invalid start time format');
-            return;
-        }
-
-        const { data, error } = await createAppointment(parseInt(serviceId), userId, startTime);
-        if (data) {
-            alert('Appointment created successfully');
-        } else {
-            setError(error);
-        }
-    };
-
+import { View, Text, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
+import { useViewBusiness } from '@/hooks/useViewBusiness';
+export default function ViewBusinessPage() {
+    const [businessId, setBusinessId] = useState<string>('');
+    const { business, loading, error } = useViewBusiness(businessId);
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Service ID</Text>
+            <Text style={styles.label}>Business ID</Text>
             <TextInput
                 style={styles.input}
-                value={serviceId}
-                onChangeText={setServiceId}
-                placeholder="Enter Service ID"
-                keyboardType="numeric"
+                value={businessId}
+                onChangeText={setBusinessId}
+                placeholder="Enter Business ID"
             />
-
-            <Text style={styles.label}>User ID</Text>
-            <TextInput
-                style={styles.input}
-                value={userId}
-                onChangeText={setUserId}
-                placeholder="Enter User ID"
-            />
-
-            <Text style={styles.label}>Start Time</Text>
-            <TextInput
-                style={styles.input}
-                value={startTime}
-                onChangeText={setStartTime}
-                placeholder="Enter Start Time (YYYY-MM-DD HH:MM:SS)"
-            />
-
-            {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
-            ) : (
-                <Button title="Create Appointment" onPress={handleCreateAppointment} />
-            )}
-
+            {loading && <ActivityIndicator size="large" color="#0000ff" />}
             {error && <Text style={styles.errorText}>{error}</Text>}
+            {business && (
+                <View style={styles.businessContainer}>
+                    <Text>Name: {business.name}</Text>
+                    <Text>Description: {business.description}</Text>
+                    <Text>Phone Number: {business.phone_number}</Text>
+                    <Text>Address: {business.address}</Text>
+                    <Text>Email: {business.email}</Text>
+                    <Text>Is Active: {business.is_active ? 'Yes' : 'No'}</Text>
+                </View>
+            )}
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -84,5 +49,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'red',
         textAlign: 'center',
+    },
+    businessContainer: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
     },
 });

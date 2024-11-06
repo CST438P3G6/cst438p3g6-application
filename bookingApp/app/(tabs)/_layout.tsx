@@ -32,6 +32,18 @@ import CreateServicePage from '@/app/(tabs)/createServicePage';
 import ViewBusinessServicesPage from '@/app/(tabs)/viewBusinessServicesPage';
 import ViewServicePage from '@/app/(tabs)/viewServicePage';
 import EditServicePage from '@/app/(tabs)/editServicePage';
+import AddFavoritePage from "@/app/(tabs)/addFavoritePage";
+import CancelAppointmentPage from "@/app/(tabs)/cancelAppointmentPage";
+import ConfirmAppointmentPage from "@/app/(tabs)/confirmAppointmentPage";
+import CreateAppointmentPage from "@/app/(tabs)/createAppointmentPage";
+import DeleteFavoritePage from "@/app/(tabs)/deleteFavoritePage";
+import ModifyBusinessHoursPage from "@/app/(tabs)/modifyBusinessHoursPage";
+import ViewAvailableAppointmentsPage from "@/app/(tabs)/viewAvailableAppointmentsPage";
+import ViewBusinessAppointmentsPage from "@/app/(tabs)/viewBusinessAppointmentsPage";
+import ViewBusinessPage from "@/app/(tabs)/viewBusinessPage";
+import ViewUserAppointmentsPage from "@/app/(tabs)/viewUserAppointmentsPage";
+import ViewUserFavoritesPage from "@/app/(tabs)/viewUserFavoritesPage";
+
 
 const Tabs = createBottomTabNavigator();
 
@@ -47,6 +59,22 @@ const clientTabs = [
     icon: BusinessIcon,
   },
   {name: 'ViewService', component: ViewServicePage, icon: BusinessIcon},
+  {name: 'ViewLoggedInUserProfile', component: ViewLoggedInUserProfile, icon: AccountIcon},
+  {name: 'AddFavorite', component: AddFavoritePage, icon: AccountIcon},
+  {name: 'CreateAppointment', component: CreateAppointmentPage, icon: AccountIcon},
+  {name: 'CancelAppointment', component: CancelAppointmentPage, icon: AccountIcon},
+  {name: 'ConfirmAppointment', component: ConfirmAppointmentPage, icon: AccountIcon},
+  {name: 'DeleteFavorite', component: DeleteFavoritePage, icon: AccountIcon},
+  {name: 'ModifyBusinessHours', component: ModifyBusinessHoursPage, icon: AccountIcon},
+  {name: 'ViewAvailableAppointments', component: ViewAvailableAppointmentsPage, icon: AccountIcon},
+    {name: 'ViewBusinessAppointments', component: ViewBusinessAppointmentsPage, icon: AccountIcon},
+    {name: 'ViewBusinessPage', component: ViewBusinessPage, icon: AccountIcon},
+    {name: 'ViewUserAppointments', component: ViewUserAppointmentsPage, icon: AccountIcon},
+    {name: 'ViewUserFavorites', component: ViewUserFavoritesPage, icon: AccountIcon},
+
+
+
+
 ];
 
 const providerTabs = [
