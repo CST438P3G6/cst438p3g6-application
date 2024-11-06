@@ -23,6 +23,7 @@ import ViewBusinessServicesPage from "@/app/(tabs)/viewBusinessServicesPage";
 import ViewServicePage from "@/app/(tabs)/viewServicePage";
 import EditServicePage from "@/app/(tabs)/editServicePage";
 import ModifyBusinessHoursPage from "@/app/(tabs)/modifyBusinessHoursPage";
+import ViewAvailableAppointmentsPage from "@/app/(tabs)/viewAvailableAppointmentsPage";
 
 
 const Tabs = createBottomTabNavigator();
@@ -71,6 +72,8 @@ export default function RootLayout() {
                                 return <BusinessIcon color={color} size={size} />;
                             case 'ModifyBusinessHours':
                                 return <BusinessIcon color={color} size={size} />;
+                            case 'ViewAvailableAppointments':
+                                return <AppointmentsIcon color={color} size={size} />;
                             default:
                                 return null;
                         }
@@ -96,6 +99,7 @@ export default function RootLayout() {
                 <Tabs.Screen name="ViewService" component={ViewServicePage} options={{ title: 'View Service' }} />
                 <Tabs.Screen name="EditService" component={EditServicePage} options={{ title: 'Edit Service' }} />
                 <Tabs.Screen name="ModifyBusinessHours" component={ModifyBusinessHoursPage} options={{ title: 'Modify Business Hours' }} />
+                <Tabs.Screen name="ViewAvailableAppointments" component={ViewAvailableAppointmentsPage} options={{ title: 'View Available Appointments' }} />
 
             </Tabs.Navigator>
         </GestureHandlerRootView>
