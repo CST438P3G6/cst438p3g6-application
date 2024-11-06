@@ -27,6 +27,7 @@ import ViewAvailableAppointmentsPage from "@/app/(tabs)/viewAvailableAppointment
 import AddFavoritePage from "@/app/(tabs)/addFavoritePage";
 import ViewUserFavoritesPage from "@/app/(tabs)/viewUserFavoritesPage";
 import DeleteFavoritePage from "@/app/(tabs)/deleteFavoritePage";
+import ViewBusinessPage from "@/app/(tabs)/viewBusinessPage";
 
 
 const Tabs = createBottomTabNavigator();
@@ -59,6 +60,8 @@ export default function RootLayout() {
                                 return <EditProfileIcon color={color} size={size} />;
                             case 'CreateBusiness':
                                 return <CreateBusinessIcon color={color} size={size} />;
+                            case 'ViewBusiness':
+                                return <BusinessIcon color={color} size={size} />;
                             case 'ViewUserBusinesses':
                                 return <BusinessIcon color={color} size={size} />;
                             case 'ViewAllBusinesses':
@@ -101,6 +104,7 @@ export default function RootLayout() {
                 <Tabs.Screen name="ViewLoggedInUserProfile" component={ViewLoggedInUserProfile} options={{ title: 'View Logged In User Profile' }} />
                 <Tabs.Screen name="EditProfile" component={EditProfileForm} options={{ title: 'Edit Profile' }} />
                 <Tabs.Screen name="CreateBusiness" component={CreateBusinessPage} options={{ title: 'Create Business' }} />
+                <Tabs.Screen name="ViewBusiness" component={ViewBusinessPage} options={{ title: 'View Business' }} />
                 <Tabs.Screen name="ViewUserBusinesses" component={ViewUserBusinessesPage} options={{ title: 'View User Businesses' }} />
                 <Tabs.Screen name="ViewAllBusinesses" component={ViewAllBusinessesPage} options={{ title: 'View All Businesses' }} />
                 <Tabs.Screen name="EditBusiness" component={EditBusinessPage} options={{ title: 'Edit Business' }} />
