@@ -28,6 +28,11 @@ import AddFavoritePage from "@/app/(tabs)/addFavoritePage";
 import ViewUserFavoritesPage from "@/app/(tabs)/viewUserFavoritesPage";
 import DeleteFavoritePage from "@/app/(tabs)/deleteFavoritePage";
 import ViewBusinessPage from "@/app/(tabs)/viewBusinessPage";
+import CreateAppointmentPage from "@/app/(tabs)/createAppointmentPage";
+import ViewUserAppointmentsPage from "@/app/(tabs)/viewUserAppointmentsPage";
+import ViewBusinessAppointmentsPage from "@/app/(tabs)/viewBusinessAppointmentsPage";
+import ConfirmAppointmentPage from "@/app/(tabs)/confirmAppointmentPage";
+import CancelAppointmentPage from "@/app/(tabs)/cancelAppointmentPage";
 
 
 const Tabs = createBottomTabNavigator();
@@ -86,6 +91,16 @@ export default function RootLayout() {
                                 return <AccountIcon color={color} size={size} />;
                             case 'DeleteFavorite':
                                 return <AccountIcon color={color} size={size} />;
+                            case 'CreateAppointment':
+                                return <AppointmentsIcon color={color} size={size} />;
+                            case 'ViewUserAppointments':
+                                return <AppointmentsIcon color={color} size={size} />;
+                            case 'ViewBusinessAppointments':
+                                return <AppointmentsIcon color={color} size={size} />;
+                            case 'ConfirmAppointment':
+                                return <AppointmentsIcon color={color} size={size} />;
+                                case 'CancelAppointment':
+                                return <AppointmentsIcon color={color} size={size} />;
 
                             default:
                                 return null;
@@ -95,6 +110,9 @@ export default function RootLayout() {
                 })}
             >
                 <Tabs.Screen name="Home" component={HomePage} options={{ title: 'Home' }} />
+                <Tabs.Screen name="CancelAppointment" component={CancelAppointmentPage} options={{ title: 'Cancel Appointment' }} />
+                <Tabs.Screen name="ConfirmAppointment" component={ConfirmAppointmentPage} options={{ title: 'Confirm Appointment' }} />
+                <Tabs.Screen name="ViewBusinessAppointments" component={ViewBusinessAppointmentsPage} options={{ title: 'View Business Appointments' }} />
                 <Tabs.Screen name="Settings" component={SettingsPage} options={{ title: 'Settings' }} />
                 <Tabs.Screen name="Business" component={BusinessPage} options={{ title: 'Business' }} />
                 <Tabs.Screen name="Appointments" component={AppointmentsPage} options={{ title: 'Appointments' }} />
@@ -117,6 +135,9 @@ export default function RootLayout() {
                 <Tabs.Screen name="AddFavorite" component={AddFavoritePage} options={{ title: 'Add Favorite' }} />
                 <Tabs.Screen name="ViewUserFavorites" component={ViewUserFavoritesPage} options={{ title: 'View User Favorites' }} />
                 <Tabs.Screen name="DeleteFavorite" component={DeleteFavoritePage} options={{ title: 'Delete Favorite' }} />
+                <Tabs.Screen name="CreateAppointment" component={CreateAppointmentPage} options={{ title: 'Create Appointment' }} />
+                <Tabs.Screen name="ViewUserAppointments" component={ViewUserAppointmentsPage} options={{ title: 'View User Appointments' }} />
+
 
             </Tabs.Navigator>
         </GestureHandlerRootView>

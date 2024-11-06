@@ -6,22 +6,14 @@ export default function CreateAppointmentPage() {
     const [serviceId, setServiceId] = useState<string>('');
     const [userId, setUserId] = useState<string>('');
     const [startTime, setStartTime] = useState<string>('');
-    const [error, setError] = useState<string | null>(null);
-    const { createAppointment, loading } = useCreateAppointment();
+    const { createAppointment, loading, error } = useCreateAppointment();
 
     const handleCreateAppointment = async () => {
-        // Validate startTime
-        const startDate = new Date(startTime);
-        if (isNaN(startDate.getTime())) {
-            setError('Invalid start time format');
-            return;
-        }
-
         const { data, error } = await createAppointment(parseInt(serviceId), userId, startTime);
         if (data) {
             alert('Appointment created successfully');
         } else {
-            setError(error);
+            alert(`Error: ${error}`);
         }
     };
 
