@@ -1,9 +1,19 @@
 import '~/global.css';
-import { StatusBar } from 'expo-status-bar';
-import * as React from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home as HomeIcon, Settings as SettingsIcon, Briefcase as BusinessIcon, Calendar as AppointmentsIcon, User as AccountIcon, FileSliders as ConfigureBusinessIcon, Edit as EditProfileIcon, PlusCircle as CreateBusinessIcon } from 'lucide-react-native';
+import React, {useEffect, useState} from 'react';
+import {StatusBar} from 'expo-status-bar';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {supabase} from '@/utils/supabase';
+import {
+  Home as HomeIcon,
+  Settings as SettingsIcon,
+  Briefcase as BusinessIcon,
+  Calendar as AppointmentsIcon,
+  User as AccountIcon,
+  FileSliders as ConfigureBusinessIcon,
+  Edit as EditProfileIcon,
+  PlusCircle as CreateBusinessIcon,
+} from 'lucide-react-native';
 
 import HomePage from './homePage';
 import SettingsPage from './settingsPage';
@@ -12,134 +22,158 @@ import AppointmentsPage from './appointmentsPage';
 import AccountPage from './accountPage';
 import ConfigureBusinessPage from './configureBusinessPage';
 import ViewProfiles from './viewProfiles';
-import ViewLoggedInUserProfile from "@/app/(tabs)/viewLoggedInUserProfile";
-import EditProfileForm from "@/app/(tabs)/editProfile";
-import CreateBusinessPage from "@/app/(tabs)/createBusinessPage";
-import ViewUserBusinessesPage from "@/app/(tabs)/viewUserBusinessesPage";
-import ViewAllBusinessesPage from "@/app/(tabs)/viewAllBusinessesPage";
-import EditBusinessPage from "@/app/(tabs)/editBusinessPage";
-import CreateServicePage from "@/app/(tabs)/createServicePage";
-import ViewBusinessServicesPage from "@/app/(tabs)/viewBusinessServicesPage";
-import ViewServicePage from "@/app/(tabs)/viewServicePage";
-import EditServicePage from "@/app/(tabs)/editServicePage";
-import ModifyBusinessHoursPage from "@/app/(tabs)/modifyBusinessHoursPage";
-import ViewAvailableAppointmentsPage from "@/app/(tabs)/viewAvailableAppointmentsPage";
-import AddFavoritePage from "@/app/(tabs)/addFavoritePage";
-import ViewUserFavoritesPage from "@/app/(tabs)/viewUserFavoritesPage";
-import DeleteFavoritePage from "@/app/(tabs)/deleteFavoritePage";
-import ViewBusinessPage from "@/app/(tabs)/viewBusinessPage";
-import CreateAppointmentPage from "@/app/(tabs)/createAppointmentPage";
-import ViewUserAppointmentsPage from "@/app/(tabs)/viewUserAppointmentsPage";
-import ViewBusinessAppointmentsPage from "@/app/(tabs)/viewBusinessAppointmentsPage";
-import ConfirmAppointmentPage from "@/app/(tabs)/confirmAppointmentPage";
-import CancelAppointmentPage from "@/app/(tabs)/cancelAppointmentPage";
-
+import ViewLoggedInUserProfile from '@/app/(tabs)/viewLoggedInUserProfile';
+import EditProfileForm from '@/app/(tabs)/editProfile';
+import CreateBusinessPage from '@/app/(tabs)/createBusinessPage';
+import ViewUserBusinessesPage from '@/app/(tabs)/viewUserBusinessesPage';
+import ViewAllBusinessesPage from '@/app/(tabs)/viewAllBusinessesPage';
+import EditBusinessPage from '@/app/(tabs)/editBusinessPage';
+import CreateServicePage from '@/app/(tabs)/createServicePage';
+import ViewBusinessServicesPage from '@/app/(tabs)/viewBusinessServicesPage';
+import ViewServicePage from '@/app/(tabs)/viewServicePage';
+import EditServicePage from '@/app/(tabs)/editServicePage';
 
 const Tabs = createBottomTabNavigator();
 
+const clientTabs = [
+  {name: 'Home', component: HomePage, icon: HomeIcon},
+  {name: 'Appointments', component: AppointmentsPage, icon: AppointmentsIcon},
+  {name: 'Account', component: AccountPage, icon: AccountIcon},
+  {name: 'Settings', component: SettingsPage, icon: SettingsIcon},
+  {name: 'editProfile', component: EditProfileForm, icon: EditProfileIcon},
+  {
+    name: 'ViewAllBusinesses',
+    component: ViewAllBusinessesPage,
+    icon: BusinessIcon,
+  },
+  {name: 'ViewService', component: ViewServicePage, icon: BusinessIcon},
+];
+
+const providerTabs = [
+  {name: 'Business', component: BusinessPage, icon: BusinessIcon},
+  {
+    name: 'ConfigureBusiness',
+    component: ConfigureBusinessPage,
+    icon: ConfigureBusinessIcon,
+  },
+  {
+    name: 'CreateBusiness',
+    component: CreateBusinessPage,
+    icon: CreateBusinessIcon,
+  },
+  {
+    name: 'ViewUserBusinesses',
+    component: ViewUserBusinessesPage,
+    icon: BusinessIcon,
+  },
+  {name: 'EditBusiness', component: EditBusinessPage, icon: BusinessIcon},
+  {
+    name: 'CreateService',
+    component: CreateServicePage,
+    icon: CreateBusinessIcon,
+  },
+  {
+    name: 'ViewBusinessServices',
+    component: ViewBusinessServicesPage,
+    icon: BusinessIcon,
+  },
+  {name: 'EditService', component: EditServicePage, icon: BusinessIcon},
+];
+
+const adminTabs = [
+  {name: 'Settings', component: SettingsPage, icon: SettingsIcon},
+  {name: 'ViewProfiles', component: ViewProfiles, icon: AccountIcon},
+];
+
 export default function RootLayout() {
-    return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <StatusBar style="auto" />
-            <Tabs.Navigator
-                screenOptions={({ route }) => ({
-                    tabBarIcon: ({ color, size }) => {
-                        switch (route.name) {
-                            case 'Home':
-                                return <HomeIcon color={color} size={size} />;
-                            case 'Settings':
-                                return <SettingsIcon color={color} size={size} />;
-                            case 'Business':
-                                return <BusinessIcon color={color} size={size} />;
-                            case 'Appointments':
-                                return <AppointmentsIcon color={color} size={size} />;
-                            case 'Account':
-                                return <AccountIcon color={color} size={size} />;
-                            case 'ConfigureBusiness':
-                                return <ConfigureBusinessIcon color={color} size={size} />;
-                            case 'ViewProfiles':
-                                return <AccountIcon color={color} size={size} />;
-                            case 'ViewLoggedInUserProfile':
-                                return <AccountIcon color={color} size={size} />;
-                            case 'EditProfile':
-                                return <EditProfileIcon color={color} size={size} />;
-                            case 'CreateBusiness':
-                                return <CreateBusinessIcon color={color} size={size} />;
-                            case 'ViewBusiness':
-                                return <BusinessIcon color={color} size={size} />;
-                            case 'ViewUserBusinesses':
-                                return <BusinessIcon color={color} size={size} />;
-                            case 'ViewAllBusinesses':
-                                return <BusinessIcon color={color} size={size} />;
-                            case 'EditBusiness':
-                                return <BusinessIcon color={color} size={size} />;
-                            case 'ViewBusinessServices':
-                                return <BusinessIcon color={color} size={size} />;
-                            case 'CreateService':
-                                return <CreateBusinessIcon color={color} size={size} />;
-                            case 'ViewService':
-                                return <BusinessIcon color={color} size={size} />;
-                            case 'EditService':
-                                return <BusinessIcon color={color} size={size} />;
-                            case 'ModifyBusinessHours':
-                                return <BusinessIcon color={color} size={size} />;
-                            case 'ViewAvailableAppointments':
-                                return <AppointmentsIcon color={color} size={size} />;
-                            case 'AddFavorite':
-                                return <AccountIcon color={color} size={size} />;
-                            case 'ViewUserFavorites':
-                                return <AccountIcon color={color} size={size} />;
-                            case 'DeleteFavorite':
-                                return <AccountIcon color={color} size={size} />;
-                            case 'CreateAppointment':
-                                return <AppointmentsIcon color={color} size={size} />;
-                            case 'ViewUserAppointments':
-                                return <AppointmentsIcon color={color} size={size} />;
-                            case 'ViewBusinessAppointments':
-                                return <AppointmentsIcon color={color} size={size} />;
-                            case 'ConfirmAppointment':
-                                return <AppointmentsIcon color={color} size={size} />;
-                                case 'CancelAppointment':
-                                return <AppointmentsIcon color={color} size={size} />;
+  const [userType, setUserType] = useState({
+    isClient: true,
+    isProvider: false,
+    isAdmin: false,
+  });
+  const [loading, setLoading] = useState(true);
 
-                            default:
-                                return null;
-                        }
-                    },
-                    headerShown: false,
-                })}
-            >
-                <Tabs.Screen name="Home" component={HomePage} options={{ title: 'Home' }} />
-                <Tabs.Screen name="CancelAppointment" component={CancelAppointmentPage} options={{ title: 'Cancel Appointment' }} />
-                <Tabs.Screen name="ConfirmAppointment" component={ConfirmAppointmentPage} options={{ title: 'Confirm Appointment' }} />
-                <Tabs.Screen name="ViewBusinessAppointments" component={ViewBusinessAppointmentsPage} options={{ title: 'View Business Appointments' }} />
-                <Tabs.Screen name="Settings" component={SettingsPage} options={{ title: 'Settings' }} />
-                <Tabs.Screen name="Business" component={BusinessPage} options={{ title: 'Business' }} />
-                <Tabs.Screen name="Appointments" component={AppointmentsPage} options={{ title: 'Appointments' }} />
-                <Tabs.Screen name="Account" component={AccountPage} options={{ title: 'Account' }} />
-                <Tabs.Screen name="ConfigureBusiness" component={ConfigureBusinessPage} options={{ title: 'Configure Business' }} />
-                <Tabs.Screen name="ViewProfiles" component={ViewProfiles} options={{ title: 'View Profiles' }} />
-                <Tabs.Screen name="ViewLoggedInUserProfile" component={ViewLoggedInUserProfile} options={{ title: 'View Logged In User Profile' }} />
-                <Tabs.Screen name="EditProfile" component={EditProfileForm} options={{ title: 'Edit Profile' }} />
-                <Tabs.Screen name="CreateBusiness" component={CreateBusinessPage} options={{ title: 'Create Business' }} />
-                <Tabs.Screen name="ViewBusiness" component={ViewBusinessPage} options={{ title: 'View Business' }} />
-                <Tabs.Screen name="ViewUserBusinesses" component={ViewUserBusinessesPage} options={{ title: 'View User Businesses' }} />
-                <Tabs.Screen name="ViewAllBusinesses" component={ViewAllBusinessesPage} options={{ title: 'View All Businesses' }} />
-                <Tabs.Screen name="EditBusiness" component={EditBusinessPage} options={{ title: 'Edit Business' }} />
-                <Tabs.Screen name="CreateService" component={CreateServicePage} options={{ title: 'Create Service' }} />
-                <Tabs.Screen name="ViewBusinessServices" component={ViewBusinessServicesPage} options={{ title: 'View Business Services' }} />
-                <Tabs.Screen name="ViewService" component={ViewServicePage} options={{ title: 'View Service' }} />
-                <Tabs.Screen name="EditService" component={EditServicePage} options={{ title: 'Edit Service' }} />
-                <Tabs.Screen name="ModifyBusinessHours" component={ModifyBusinessHoursPage} options={{ title: 'Modify Business Hours' }} />
-                <Tabs.Screen name="ViewAvailableAppointments" component={ViewAvailableAppointmentsPage} options={{ title: 'View Available Appointments' }} />
-                <Tabs.Screen name="AddFavorite" component={AddFavoritePage} options={{ title: 'Add Favorite' }} />
-                <Tabs.Screen name="ViewUserFavorites" component={ViewUserFavoritesPage} options={{ title: 'View User Favorites' }} />
-                <Tabs.Screen name="DeleteFavorite" component={DeleteFavoritePage} options={{ title: 'Delete Favorite' }} />
-                <Tabs.Screen name="CreateAppointment" component={CreateAppointmentPage} options={{ title: 'Create Appointment' }} />
-                <Tabs.Screen name="ViewUserAppointments" component={ViewUserAppointmentsPage} options={{ title: 'View User Appointments' }} />
+  useEffect(() => {
+    const fetchUserType = async () => {
+      const {
+        data: {user},
+        error: userError,
+      } = await supabase.auth.getUser();
 
+      if (userError || !user) {
+        console.error('Error fetching user:', userError);
+        // Handle the error or redirect to login
+        setLoading(false);
+        return;
+      }
 
-            </Tabs.Navigator>
-        </GestureHandlerRootView>
-    );
+      const {data: profile, error: profileError} = await supabase
+        .from('profiles')
+        .select('isadmin, isprovider')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('Error fetching profile:', profileError);
+        // Handle the error or set default userType
+        setLoading(false);
+        return;
+      }
+
+      setUserType({
+        isClient: true,
+        isProvider: profile.isprovider ?? false,
+        isAdmin: profile.isadmin ?? false,
+      });
+
+      setLoading(false);
+    };
+
+    fetchUserType();
+  }, []);
+
+  // Move useMemo above the conditional return
+  const availableTabs = React.useMemo(() => {
+    let tabs = [...clientTabs];
+
+    if (userType.isProvider) {
+      tabs = [...tabs, ...providerTabs];
+    }
+
+    if (userType.isAdmin) {
+      tabs = [...tabs, ...adminTabs];
+    }
+
+    return tabs;
+  }, [userType]);
+
+  return (
+    <GestureHandlerRootView style={{flex: 1}}>
+      <StatusBar style="auto" />
+      <Tabs.Navigator
+        screenOptions={({route}) => ({
+          tabBarIcon: ({color, size}) => {
+            const tab = availableTabs.find((tab) => tab.name === route.name);
+            if (tab) {
+              const Icon = tab.icon;
+              return <Icon color={color} size={size} />;
+            }
+            return null;
+          },
+          headerShown: false,
+        })}
+      >
+        {availableTabs.map((tab) => (
+          <Tabs.Screen
+            key={tab.name}
+            name={tab.name}
+            component={tab.component}
+            options={{
+              title: tab.name.replace(/([A-Z])/g, ' $1').trim(),
+            }}
+          />
+        ))}
+      </Tabs.Navigator>
+    </GestureHandlerRootView>
+  );
 }
