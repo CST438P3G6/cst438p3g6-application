@@ -1,28 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { View, Alert, Switch } from 'react-native';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/utils/supabase';
+import React, {useEffect, useState} from 'react';
+import {View, Alert} from 'react-native';
+import {User} from '@supabase/supabase-js';
+import {supabase} from '@/utils/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { CommonActions } from '@react-navigation/native';
-import { useNavigation } from '@react-navigation/native';
-import { useColorScheme } from '~/lib/useColorScheme'; 
-import { useTheme } from '@react-navigation/native'; 
-import { Text, TextClassContext } from '@/components/ui/text'; 
+import {Button} from '@/components/ui/button';
+import {Card, CardContent} from '@/components/ui/card';
+import {CommonActions, useNavigation} from '@react-navigation/native';
+import {useColorScheme} from '~/lib/useColorScheme';
+import {useTheme} from '@react-navigation/native';
+import {Text} from '@/components/ui/text';
+import {Switch} from '@/components/ui/switch';
+import {Label} from '@/components/ui/label';
 
 const SettingsPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
-  const { isDarkColorScheme, setColorScheme } = useColorScheme();
-  const { colors } = useTheme(); 
+  const {isDarkColorScheme, setColorScheme} = useColorScheme();
+  const {colors} = useTheme();
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isProvider, setIsProvider] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
       const {
-        data: { user },
+        data: {user},
         error,
       } = await supabase.auth.getUser();
       if (error) {
@@ -37,7 +41,7 @@ const SettingsPage: React.FC = () => {
   }, []);
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
+    const {error} = await supabase.auth.signOut();
     if (error) {
       Alert.alert('Error logging out', error.message);
     } else {
@@ -46,14 +50,14 @@ const SettingsPage: React.FC = () => {
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: 'index' }],
-        })
+          routes: [{name: 'index'}],
+        }),
       );
     }
   };
 
   const handleDeleteAccount = async () => {
-    const { error } = await supabase.auth.admin.deleteUser(user?.id || '');
+    const {error} = await supabase.auth.admin.deleteUser(user?.id || '');
     if (error) {
       Alert.alert('Error deleting account', error.message);
     } else {
@@ -63,8 +67,8 @@ const SettingsPage: React.FC = () => {
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: 'index' }],
-        })
+          routes: [{name: 'index'}],
+        }),
       );
     }
   };
@@ -75,34 +79,80 @@ const SettingsPage: React.FC = () => {
     await AsyncStorage.setItem('theme', newTheme);
   };
 
+  const handleAdminChange = () => {
+    // Placeholder function
+    setIsAdmin(!isAdmin);
+  };
+
+  const handleProviderChange = () => {
+    // Placeholder function
+    setIsProvider(!isProvider);
+  };
+
   if (loading) {
-    return <Text style={{ color: colors.text }}>Loading...</Text>;
+    return <Text style={{color: colors.text}}>Loading...</Text>;
   }
 
   return (
-    <View className="flex-1 justify-center items-center p-5" style={{ backgroundColor: colors.background }}>
+    <View className="flex-1 justify-center items-center p-5">
       {user ? (
-        <Card style={{ backgroundColor: colors.card }}>
-          <TextClassContext.Provider value="text-lg text-foreground">
-            <Text className="mb-2">Email: {user.email}</Text>
-            <Text className="mb-2">ID: {user.id}</Text>
+        <Card style={{backgroundColor: colors.card}}>
+          <CardContent>
+            <Text className="mb-2 text-lg" style={{color: colors.text}}>
+              Email: {user.email}
+            </Text>
+            <Text className="mb-2 text-lg" style={{color: colors.text}}>
+              ID: {user.id}
+            </Text>
             <Button variant="default" size="default" onPress={handleLogout}>
               <Text>Logout</Text>
             </Button>
-            <Button variant="destructive" size="default" onPress={handleDeleteAccount}>
+            <Button
+              variant="destructive"
+              size="default"
+              onPress={handleDeleteAccount}
+            >
               <Text>Delete Account</Text>
             </Button>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
-              <Text style={{ marginRight: 10 }}>Dark Theme</Text>
+            <View className="flex-row items-center mt-5">
               <Switch
-                value={isDarkColorScheme}
-                onValueChange={toggleTheme}
+                checked={isDarkColorScheme}
+                onCheckedChange={toggleTheme}
+                nativeID="dark-theme"
               />
+              <Label
+                nativeID="dark-theme"
+                onPress={() => {
+                  toggleTheme(!isDarkColorScheme);
+                }}
+              >
+                Dark Theme
+              </Label>
             </View>
-          </TextClassContext.Provider>
+            <View className="flex-row items-center mt-5">
+              <Switch
+                checked={isAdmin}
+                onCheckedChange={handleAdminChange}
+                nativeID="admin-switch"
+              />
+              <Label nativeID="admin-switch" onPress={handleAdminChange}>
+                Admin
+              </Label>
+            </View>
+            <View className="flex-row items-center mt-5">
+              <Switch
+                checked={isProvider}
+                onCheckedChange={handleProviderChange}
+                nativeID="provider-switch"
+              />
+              <Label nativeID="provider-switch" onPress={handleProviderChange}>
+                Provider
+              </Label>
+            </View>
+          </CardContent>
         </Card>
       ) : (
-        <Text style={{ color: colors.text }}>No user information available</Text>
+        <Text>No user information available</Text>
       )}
     </View>
   );
