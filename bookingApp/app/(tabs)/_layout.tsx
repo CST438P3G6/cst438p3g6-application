@@ -43,6 +43,11 @@ import ViewBusinessAppointmentsPage from "@/app/(tabs)/viewBusinessAppointmentsP
 import ViewBusinessPage from "@/app/(tabs)/viewBusinessPage";
 import ViewUserAppointmentsPage from "@/app/(tabs)/viewUserAppointmentsPage";
 import ViewUserFavoritesPage from "@/app/(tabs)/viewUserFavoritesPage";
+import CreateReviewPage from "@/app/(tabs)/createReviewPage";
+import ViewUserReviewsPage from "@/app/(tabs)/viewUserReviewsPage";
+import ViewBusinessReviewsPage from "@/app/(tabs)/viewBusinessReviewsPage";
+import EditReviewPage from "@/app/(tabs)/editReviewPage";
+import DeleteReviewPage from "@/app/(tabs)/deleteReviewPage";
 
 
 const Tabs = createBottomTabNavigator();
@@ -52,6 +57,11 @@ const clientTabs = [
   {name: 'Appointments', component: AppointmentsPage, icon: AppointmentsIcon},
   {name: 'Account', component: AccountPage, icon: AccountIcon},
   {name: 'Settings', component: SettingsPage, icon: SettingsIcon},
+    {name: 'DeleteReview', component: DeleteReviewPage, icon: AccountIcon},
+    {name: 'EditReview', component: EditReviewPage, icon: AccountIcon},
+    {name: 'CreateReview', component: CreateReviewPage, icon: AccountIcon},
+    {name: 'ViewBusinessReviews', component: ViewBusinessReviewsPage, icon: AccountIcon},
+  {name: 'ViewUserReviews', component: ViewUserReviewsPage, icon: AccountIcon},
   {name: 'editProfile', component: EditProfileForm, icon: EditProfileIcon},
   {
     name: 'ViewAllBusinesses',
