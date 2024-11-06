@@ -24,6 +24,9 @@ import ViewServicePage from "@/app/(tabs)/viewServicePage";
 import EditServicePage from "@/app/(tabs)/editServicePage";
 import ModifyBusinessHoursPage from "@/app/(tabs)/modifyBusinessHoursPage";
 import ViewAvailableAppointmentsPage from "@/app/(tabs)/viewAvailableAppointmentsPage";
+import AddFavoritePage from "@/app/(tabs)/addFavoritePage";
+import ViewUserFavoritesPage from "@/app/(tabs)/viewUserFavoritesPage";
+import DeleteFavoritePage from "@/app/(tabs)/deleteFavoritePage";
 
 
 const Tabs = createBottomTabNavigator();
@@ -74,6 +77,13 @@ export default function RootLayout() {
                                 return <BusinessIcon color={color} size={size} />;
                             case 'ViewAvailableAppointments':
                                 return <AppointmentsIcon color={color} size={size} />;
+                            case 'AddFavorite':
+                                return <AccountIcon color={color} size={size} />;
+                            case 'ViewUserFavorites':
+                                return <AccountIcon color={color} size={size} />;
+                            case 'DeleteFavorite':
+                                return <AccountIcon color={color} size={size} />;
+
                             default:
                                 return null;
                         }
@@ -100,6 +110,9 @@ export default function RootLayout() {
                 <Tabs.Screen name="EditService" component={EditServicePage} options={{ title: 'Edit Service' }} />
                 <Tabs.Screen name="ModifyBusinessHours" component={ModifyBusinessHoursPage} options={{ title: 'Modify Business Hours' }} />
                 <Tabs.Screen name="ViewAvailableAppointments" component={ViewAvailableAppointmentsPage} options={{ title: 'View Available Appointments' }} />
+                <Tabs.Screen name="AddFavorite" component={AddFavoritePage} options={{ title: 'Add Favorite' }} />
+                <Tabs.Screen name="ViewUserFavorites" component={ViewUserFavoritesPage} options={{ title: 'View User Favorites' }} />
+                <Tabs.Screen name="DeleteFavorite" component={DeleteFavoritePage} options={{ title: 'Delete Favorite' }} />
 
             </Tabs.Navigator>
         </GestureHandlerRootView>
