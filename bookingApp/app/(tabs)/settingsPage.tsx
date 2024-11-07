@@ -1,16 +1,19 @@
 import React, {useEffect, useState} from 'react';
-import {View, Alert} from 'react-native';
+import {useRouter} from 'expo-router';
+import {View, Alert, ActivityIndicator} from 'react-native';
 import {User} from '@supabase/supabase-js';
 import {supabase} from '@/utils/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Button} from '@/components/ui/button';
-import {Card, CardContent} from '@/components/ui/card';
+import {Card, CardContent, CardHeader} from '@/components/ui/card';
 import {CommonActions, useNavigation} from '@react-navigation/native';
 import {useColorScheme} from '~/lib/useColorScheme';
 import {useTheme} from '@react-navigation/native';
 import {Text} from '@/components/ui/text';
 import {Switch} from '@/components/ui/switch';
 import {Label} from '@/components/ui/label';
+
+import {useLoggedInUserProfile} from '@/hooks/useLoggedInUserProfile';
 
 const SettingsPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -22,6 +25,10 @@ const SettingsPage: React.FC = () => {
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isProvider, setIsProvider] = useState(false);
+
+  const {profile: data, error} = useLoggedInUserProfile();
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -89,71 +96,95 @@ const SettingsPage: React.FC = () => {
     setIsProvider(!isProvider);
   };
 
+  const handleEditProfileChange = () => {
+    //placeholder
+    router.push('/editProfile');
+  };
+
   if (loading) {
-    return <Text style={{color: colors.text}}>Loading...</Text>;
+    return <ActivityIndicator size="large" color="#0000ff" />;
   }
 
   return (
     <View className="flex-1 justify-center items-center p-5">
-      {user ? (
-        <Card style={{backgroundColor: colors.card}}>
-          <CardContent>
-            <Text className="mb-2 text-lg" style={{color: colors.text}}>
-              Email: {user.email}
-            </Text>
-            <Text className="mb-2 text-lg" style={{color: colors.text}}>
-              ID: {user.id}
-            </Text>
-            <Button variant="default" size="default" onPress={handleLogout}>
-              <Text>Logout</Text>
-            </Button>
-            <Button
-              variant="destructive"
-              size="default"
-              onPress={handleDeleteAccount}
+      <Card className="">
+        <CardHeader>
+          <Text>User Information</Text>
+        </CardHeader>
+        <CardContent>
+          {data && (
+            <>
+              <Text>ID: {data.id}</Text>
+              <Text>
+                Name: {data.first_name} {data.last_name}
+              </Text>
+              <Text>Email: {data.email}</Text>
+              <Text>Phone: {data.phone_number}</Text>
+              <Text>Role: {data.isadmin ? 'Admin' : 'User'}</Text>
+              {/* {For the Role is needs to show that the user is admin or provider} */}
+              <Text>Status: {data.is_active ? 'Active' : 'Inactive'}</Text>
+            </>
+          )}
+        </CardContent>
+      </Card>
+      <Card className="flex justify-center">
+        <CardContent>
+          <Button variant="default" size="default" onPress={handleLogout}>
+            <Text>Logout</Text>
+          </Button>
+
+          <Button
+            variant="default"
+            size="default"
+            onPress={handleEditProfileChange}
+          >
+            <Text>Edit Profile</Text>
+          </Button>
+
+          <Button
+            variant="destructive"
+            size="default"
+            onPress={handleDeleteAccount}
+          >
+            <Text>Delete Account</Text>
+          </Button>
+          <View className="flex-row items-center mt-5">
+            <Switch
+              checked={isDarkColorScheme}
+              onCheckedChange={toggleTheme}
+              nativeID="dark-theme"
+            />
+            <Label
+              nativeID="dark-theme"
+              onPress={() => {
+                toggleTheme(!isDarkColorScheme);
+              }}
             >
-              <Text>Delete Account</Text>
-            </Button>
-            <View className="flex-row items-center mt-5">
-              <Switch
-                checked={isDarkColorScheme}
-                onCheckedChange={toggleTheme}
-                nativeID="dark-theme"
-              />
-              <Label
-                nativeID="dark-theme"
-                onPress={() => {
-                  toggleTheme(!isDarkColorScheme);
-                }}
-              >
-                Dark Theme
-              </Label>
-            </View>
-            <View className="flex-row items-center mt-5">
-              <Switch
-                checked={isAdmin}
-                onCheckedChange={handleAdminChange}
-                nativeID="admin-switch"
-              />
-              <Label nativeID="admin-switch" onPress={handleAdminChange}>
-                Admin
-              </Label>
-            </View>
-            <View className="flex-row items-center mt-5">
-              <Switch
-                checked={isProvider}
-                onCheckedChange={handleProviderChange}
-                nativeID="provider-switch"
-              />
-              <Label nativeID="provider-switch" onPress={handleProviderChange}>
-                Provider
-              </Label>
-            </View>
-          </CardContent>
-        </Card>
-      ) : (
-        <Text>No user information available</Text>
-      )}
+              Dark Theme
+            </Label>
+          </View>
+          <View className="flex-row items-center mt-5">
+            <Switch
+              checked={isAdmin}
+              onCheckedChange={handleAdminChange}
+              nativeID="admin-switch"
+            />
+            <Label nativeID="admin-switch" onPress={handleAdminChange}>
+              Admin
+            </Label>
+          </View>
+          <View className="flex-row items-center mt-5">
+            <Switch
+              checked={isProvider}
+              onCheckedChange={handleProviderChange}
+              nativeID="provider-switch"
+            />
+            <Label nativeID="provider-switch" onPress={handleProviderChange}>
+              Provider
+            </Label>
+          </View>
+        </CardContent>
+      </Card>
     </View>
   );
 };
