@@ -48,6 +48,12 @@ import ViewUserReviewsPage from "@/app/(tabs)/viewUserReviewsPage";
 import ViewBusinessReviewsPage from "@/app/(tabs)/viewBusinessReviewsPage";
 import EditReviewPage from "@/app/(tabs)/editReviewPage";
 import DeleteReviewPage from "@/app/(tabs)/deleteReviewPage";
+import AddBusinessImagesPage from "@/app/(tabs)/addBusinessImagesPage";
+import ViewBusinessImagesPage from "@/app/(tabs)/viewBusinessImagesPage";
+import DeleteBusinessImagePage from "@/app/(tabs)/deleteBusinessImagePage";
+import AddReviewImagesPage from "@/app/(tabs)/addReviewImagesPage";
+import ViewReviewImagesPage from "@/app/(tabs)/viewReviewImagesPage";
+import DeleteReviewImagePage from "@/app/(tabs)/deleteReviewImagePage";
 
 
 const Tabs = createBottomTabNavigator();
@@ -57,6 +63,12 @@ const clientTabs = [
   {name: 'Appointments', component: AppointmentsPage, icon: AppointmentsIcon},
   {name: 'Account', component: AccountPage, icon: AccountIcon},
   {name: 'Settings', component: SettingsPage, icon: SettingsIcon},
+    {name: 'DeleteReviewImage', component: DeleteReviewImagePage, icon: AccountIcon},
+    {name: 'ViewReviewImages', component: ViewReviewImagesPage, icon: AccountIcon},
+    {name: 'AddReviewImages', component: AddReviewImagesPage, icon: AccountIcon},
+    {name: 'DeleteBusinessImage', component: DeleteBusinessImagePage, icon: AccountIcon},
+    {name: 'ViewBusinessImages', component: ViewBusinessImagesPage, icon: AccountIcon},
+    {name: 'AddBusinessImage', component: AddBusinessImagesPage, icon: AccountIcon},
     {name: 'DeleteReview', component: DeleteReviewPage, icon: AccountIcon},
     {name: 'EditReview', component: EditReviewPage, icon: AccountIcon},
     {name: 'CreateReview', component: CreateReviewPage, icon: AccountIcon},

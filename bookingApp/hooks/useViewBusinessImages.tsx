@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 
-export function useViewBusinessReviews(businessId: string) {
-    const [reviews, setReviews] = useState([]);
+export function useViewBusinessImages(businessId: string) {
+    const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchReviews = async () => {
+        const fetchImages = async () => {
             setLoading(true);
             setError(null);
 
             const { data, error } = await supabase
-                .from('reviews')
+                .from('business_images')
                 .select('*')
                 .eq('business_id', businessId);
 
@@ -20,14 +20,14 @@ export function useViewBusinessReviews(businessId: string) {
                 setError(error.message);
             } else {
                 // @ts-ignore
-                setReviews(data);
+                setImages(data);
             }
 
             setLoading(false);
         };
 
-        fetchReviews();
+        fetchImages();
     }, [businessId]);
 
-    return { reviews, loading, error };
+    return { images, loading, error };
 }
