@@ -12,12 +12,11 @@ import {useTheme} from '@react-navigation/native';
 import {Text} from '@/components/ui/text';
 import {Switch} from '@/components/ui/switch';
 import {Label} from '@/components/ui/label';
-
 import {useLoggedInUserProfile} from '@/hooks/useLoggedInUserProfile';
 
 const SettingsPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
   const {isDarkColorScheme, setColorScheme} = useColorScheme();
@@ -26,7 +25,8 @@ const SettingsPage: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isProvider, setIsProvider] = useState(false);
 
-  const {profile: data, error} = useLoggedInUserProfile();
+  // Get refetchProfile from the hook
+  const {profile: data, error, refetchProfile} = useLoggedInUserProfile();
 
   const router = useRouter();
 
@@ -47,6 +47,13 @@ const SettingsPage: React.FC = () => {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    if (data) {
+      setIsAdmin(data.isadmin);
+      setIsProvider(data.isprovider);
+    }
+  }, [data]);
+
   const handleLogout = async () => {
     const {error} = await supabase.auth.signOut();
     if (error) {
@@ -65,19 +72,7 @@ const SettingsPage: React.FC = () => {
 
   const handleDeleteAccount = async () => {
     const {error} = await supabase.auth.admin.deleteUser(user?.id || '');
-    if (error) {
-      Alert.alert('Error deleting account', error.message);
-    } else {
-      await AsyncStorage.removeItem('supabase.auth.token');
-      Alert.alert('Account deleted successfully');
-      console.log('Account deleted successfully');
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{name: 'index'}],
-        }),
-      );
-    }
+    // Don't implement this just yet
   };
 
   const toggleTheme = async (value: boolean) => {
@@ -86,70 +81,49 @@ const SettingsPage: React.FC = () => {
     await AsyncStorage.setItem('theme', newTheme);
   };
 
-  const handleAdminChange = async () => {
+  const toggleAdminStatus = async (value: boolean) => {
+    if (!user) return;
+
     try {
-      setLoading(true);
-      const {
-        data: {user},
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        Alert.alert('Error', 'No user found');
-        return;
-      }
-
       const {error} = await supabase
         .from('profiles')
-        .update({isadmin: !isAdmin})
+        .update({isadmin: value})
         .eq('id', user.id);
 
       if (error) {
-        Alert.alert('Error', error.message);
-        return;
+        throw error;
       }
 
-      setIsAdmin(!isAdmin);
-      Alert.alert('Success', 'Admin status updated');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update admin status');
-    } finally {
-      setLoading(false);
+      // Refetch profile data to refresh the page
+      await refetchProfile();
+    } catch (error: any) {
+      console.error('Error updating admin status:', error);
+      Alert.alert('Error updating admin status', error.message);
     }
   };
 
-  const handleProviderChange = async () => {
+  const toggleProviderStatus = async (value: boolean) => {
+    if (!user) return;
+
     try {
-      setLoading(true);
-      const {
-        data: {user},
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        Alert.alert('Error', 'No user found');
-        return;
-      }
-
       const {error} = await supabase
         .from('profiles')
-        .update({isprovider: !isProvider})
+        .update({isprovider: value})
         .eq('id', user.id);
 
       if (error) {
-        Alert.alert('Error', error.message);
-        return;
+        throw error;
       }
 
-      setIsProvider(!isProvider);
-      Alert.alert('Success', 'Provider status updated');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update provider status');
-    } finally {
-      setLoading(false);
+      // Refetch profile data to refresh the page
+      await refetchProfile();
+    } catch (error: any) {
+      console.error('Error updating provider status:', error);
+      Alert.alert('Error updating provider status', error.message);
     }
   };
 
   const handleEditProfileChange = () => {
-    //placeholder
     router.push('/settings/editProfile');
   };
 
@@ -159,7 +133,7 @@ const SettingsPage: React.FC = () => {
 
   return (
     <View className="flex-1 justify-center items-center p-5">
-      <Card className="">
+      <Card>
         <CardHeader>
           <Text>User Information</Text>
         </CardHeader>
@@ -172,14 +146,14 @@ const SettingsPage: React.FC = () => {
               </Text>
               <Text>Email: {data.email}</Text>
               <Text>Phone: {data.phone_number}</Text>
-              <Text>Role: {data.isadmin ? 'Admin' : 'User'}</Text>
-              {/* {For the Role is needs to show that the user is admin or provider} */}
+              <Text>Admin: {data.isadmin ? 'True' : 'False'}</Text>
+              <Text>Provider: {data.isprovider ? 'True' : 'False'}</Text>
               <Text>Status: {data.is_active ? 'Active' : 'Inactive'}</Text>
             </>
           )}
         </CardContent>
       </Card>
-      <Card className="flex justify-center">
+      <Card className="flex justify-center mt-5">
         <CardContent>
           <Button variant="default" size="default" onPress={handleLogout}>
             <Text>Logout</Text>
@@ -189,6 +163,7 @@ const SettingsPage: React.FC = () => {
             variant="default"
             size="default"
             onPress={handleEditProfileChange}
+            className="mt-2"
           >
             <Text>Edit Profile</Text>
           </Button>
@@ -197,9 +172,11 @@ const SettingsPage: React.FC = () => {
             variant="destructive"
             size="default"
             onPress={handleDeleteAccount}
+            className="mt-2"
           >
             <Text>Delete Account</Text>
           </Button>
+
           <View className="flex-row items-center mt-5">
             <Switch
               checked={isDarkColorScheme}
@@ -211,29 +188,33 @@ const SettingsPage: React.FC = () => {
               onPress={() => {
                 toggleTheme(!isDarkColorScheme);
               }}
+              className="ml-2"
             >
               Dark Theme
             </Label>
           </View>
+
           <View className="flex-row items-center mt-5">
             <Switch
               checked={isAdmin}
-              onCheckedChange={handleAdminChange}
-              nativeID="admin-switch"
+              onCheckedChange={(value) => toggleAdminStatus(value)}
             />
-            <Label nativeID="admin-switch" onPress={handleAdminChange}>
+            <Text onPress={() => toggleAdminStatus(!isAdmin)} className="ml-2">
               Admin
-            </Label>
+            </Text>
           </View>
+
           <View className="flex-row items-center mt-5">
             <Switch
               checked={isProvider}
-              onCheckedChange={handleProviderChange}
-              nativeID="provider-switch"
+              onCheckedChange={(value) => toggleProviderStatus(value)}
             />
-            <Label nativeID="provider-switch" onPress={handleProviderChange}>
+            <Text
+              onPress={() => toggleProviderStatus(!isProvider)}
+              className="ml-2"
+            >
               Provider
-            </Label>
+            </Text>
           </View>
         </CardContent>
       </Card>
