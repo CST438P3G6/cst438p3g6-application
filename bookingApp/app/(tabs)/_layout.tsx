@@ -10,7 +10,6 @@ export default function TabLayout() {
   useEffect(() => {
     checkUserRole();
 
-    // Set up Supabase Realtime subscription
     const subscription = supabase
       .channel('public:profiles')
       .on(
@@ -31,7 +30,6 @@ export default function TabLayout() {
       )
       .subscribe();
 
-    // Cleanup function to remove subscription on unmount
     return () => {
       supabase.removeChannel(subscription);
     };
@@ -57,6 +55,60 @@ export default function TabLayout() {
     }
   };
 
+  const tabScreens = [
+    <Tabs.Screen
+      key="home"
+      name="(client)/home"
+      options={{
+        title: 'Home',
+        tabBarIcon: ({color}) => <Home size={24} color={color} />,
+      }}
+    />,
+    <Tabs.Screen
+      key="appointments"
+      name="(client)/appointments"
+      options={{
+        title: 'Appointments',
+        tabBarIcon: ({color}) => <Calendar size={24} color={color} />,
+      }}
+    />,
+    <Tabs.Screen
+      key="business"
+      name="(client)/business"
+      options={{
+        title: 'Business',
+        tabBarIcon: ({color}) => <Users size={24} color={color} />,
+      }}
+    />,
+    isAdmin && (
+      <Tabs.Screen
+        key="viewProfiles"
+        name="(admin)/viewProfiles"
+        options={{
+          title: 'Profiles',
+        }}
+      />
+    ),
+    isProvider && (
+      <Tabs.Screen
+        key="viewAllBusinessesPage"
+        name="(provider)/viewAllBusinessesPage"
+        options={{
+          title: 'Businesses',
+          tabBarIcon: ({color}) => <Users size={24} color={color} />,
+        }}
+      />
+    ),
+    <Tabs.Screen
+      key="settings"
+      name="settings"
+      options={{
+        title: 'Settings',
+        tabBarIcon: ({color}) => <Settings size={24} color={color} />,
+      }}
+    />,
+  ].filter(Boolean);
+
   return (
     <Tabs
       screenOptions={{
@@ -64,55 +116,7 @@ export default function TabLayout() {
         headerShown: false,
       }}
     >
-      <Tabs.Screen
-        name="(client)/home"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({color}) => <Home size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="(client)/appointments"
-        options={{
-          title: 'Appointments',
-          tabBarIcon: ({color}) => <Calendar size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="(client)/business"
-        options={{
-          title: 'Business',
-          tabBarIcon: ({color}) => <Users size={24} color={color} />,
-        }}
-      />
-
-      {isAdmin && (
-        <Tabs.Screen
-          name="(admin)/viewProfiles"
-          options={{
-            title: 'Profiles',
-          }}
-        />
-      )}
-
-      {isProvider && (
-        <Tabs.Screen
-          name="(provider)/viewAllBusinessesPage"
-          options={{
-            title: 'Businesses',
-            tabBarIcon: ({color}) => <Users size={24} color={color} />,
-          }}
-        />
-      )}
-
-      <Tabs.Screen
-        name="settings/index"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({color}) => <Settings size={24} color={color} />,
-        }}
-      />
+      {tabScreens}
     </Tabs>
   );
 }
-
