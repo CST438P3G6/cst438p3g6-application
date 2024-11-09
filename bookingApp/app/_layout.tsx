@@ -1,13 +1,13 @@
 import '~/global.css';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Theme, ThemeProvider } from '@react-navigation/native';
-import { SplashScreen, Slot } from 'expo-router';
+import {Theme, ThemeProvider} from '@react-navigation/native';
+import {SplashScreen, Slot} from 'expo-router';
 import * as React from 'react';
-import { Platform } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { NAV_THEME } from '~/lib/constants';
-import { useColorScheme } from '~/lib/useColorScheme';
+import {Platform} from 'react-native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {NAV_THEME} from '~/lib/constants';
+import {useColorScheme} from '~/lib/useColorScheme';
 
 const LIGHT_THEME: Theme = {
   dark: false,
@@ -18,14 +18,12 @@ const DARK_THEME: Theme = {
   colors: NAV_THEME.dark,
 };
 
-export {
-  ErrorBoundary,
-} from 'expo-router';
+export {ErrorBoundary} from 'expo-router';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { setColorScheme, isDarkColorScheme } = useColorScheme();
+  const {setColorScheme, isDarkColorScheme} = useColorScheme();
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
 
   React.useEffect(() => {
@@ -57,8 +55,9 @@ export default function RootLayout() {
   }
 
   return (
+    // this provides the theme to all pages in the app throught slot
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{flex: 1}}>
         <Slot />
       </GestureHandlerRootView>
     </ThemeProvider>

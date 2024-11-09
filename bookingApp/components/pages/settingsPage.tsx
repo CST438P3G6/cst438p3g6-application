@@ -17,7 +17,7 @@ import {useLoggedInUserProfile} from '@/hooks/useLoggedInUserProfile';
 
 const SettingsPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
   const {isDarkColorScheme, setColorScheme} = useColorScheme();
@@ -86,19 +86,71 @@ const SettingsPage: React.FC = () => {
     await AsyncStorage.setItem('theme', newTheme);
   };
 
-  const handleAdminChange = () => {
-    // Placeholder function
-    setIsAdmin(!isAdmin);
+  const handleAdminChange = async () => {
+    try {
+      setLoading(true);
+      const {
+        data: {user},
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        Alert.alert('Error', 'No user found');
+        return;
+      }
+
+      const {error} = await supabase
+        .from('profiles')
+        .update({isadmin: !isAdmin})
+        .eq('id', user.id);
+
+      if (error) {
+        Alert.alert('Error', error.message);
+        return;
+      }
+
+      setIsAdmin(!isAdmin);
+      Alert.alert('Success', 'Admin status updated');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update admin status');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleProviderChange = () => {
-    // Placeholder function
-    setIsProvider(!isProvider);
+  const handleProviderChange = async () => {
+    try {
+      setLoading(true);
+      const {
+        data: {user},
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        Alert.alert('Error', 'No user found');
+        return;
+      }
+
+      const {error} = await supabase
+        .from('profiles')
+        .update({isprovider: !isProvider})
+        .eq('id', user.id);
+
+      if (error) {
+        Alert.alert('Error', error.message);
+        return;
+      }
+
+      setIsProvider(!isProvider);
+      Alert.alert('Success', 'Provider status updated');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update provider status');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditProfileChange = () => {
     //placeholder
-    router.push('/editProfile');
+    router.push('/settings/editProfile');
   };
 
   if (loading) {
