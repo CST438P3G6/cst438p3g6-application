@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Alert } from 'react-native';
-import { useTheme } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import { supabase } from '@/utils/supabase';
-import { Button } from '~/components/ui/button';
+import React, {useState} from 'react';
+import {View, Alert} from 'react-native';
+import {useTheme} from '@react-navigation/native';
+import {useRouter} from 'expo-router';
+import {supabase} from '@/utils/supabase';
+import {Button} from '~/components/ui/button';
 import {
   Card,
   CardContent,
@@ -12,24 +12,24 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Text, TextClassContext } from '@/components/ui/text';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Text, TextClassContext} from '@/components/ui/text';
 
 export default function SignUpPage() {
-  const { colors } = useTheme();
+  const {colors} = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
   const router = useRouter();
 
   const signUpWithEmail = async () => {
     setLoading(true);
-    let validationErrors: { [key: string]: string } = {};
+    let validationErrors: {[key: string]: string} = {};
 
     if (!firstName) {
       validationErrors.firstName = 'First name is required';
@@ -54,23 +54,27 @@ export default function SignUpPage() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const {data, error} = await supabase.auth.signUp({
         email,
         password,
       });
       const user = data.user;
 
       if (error) {
-        if (error.message.includes('Password should be at least 6 characters')) {
-          setErrors({ password: 'Password should be at least 6 characters' });
+        if (
+          error.message.includes('Password should be at least 6 characters')
+        ) {
+          setErrors({password: 'Password should be at least 6 characters'});
         } else if (error.message.includes('Unable to validate email address')) {
-          setErrors({ email: 'Unable to validate email address: invalid format' });
+          setErrors({
+            email: 'Unable to validate email address: invalid format',
+          });
         } else {
           console.error('Signup error:', error);
           Alert.alert('Error', error.message);
         }
       } else if (user) {
-        const { data: profileData, error: profileFetchError } = await supabase
+        const {data: profileData, error: profileFetchError} = await supabase
           .from('profiles')
           .select('id')
           .eq('id', user.id)
@@ -80,7 +84,7 @@ export default function SignUpPage() {
           console.error('Profile fetch error:', profileFetchError);
           Alert.alert('Error', profileFetchError.message);
         } else if (profileData) {
-          const { error: profileUpdateError } = await supabase
+          const {error: profileUpdateError} = await supabase
             .from('profiles')
             .update({
               first_name: firstName,
@@ -94,10 +98,10 @@ export default function SignUpPage() {
             Alert.alert('Error', profileUpdateError.message);
           } else {
             console.log('User signed up and profile updated');
-            router.replace('/(tabs)/homePage');
+            router.replace('/(tabs)/(client)/home');
           }
         } else {
-          const { error: profileInsertError } = await supabase
+          const {error: profileInsertError} = await supabase
             .from('profiles')
             .insert([
               {
@@ -129,15 +133,18 @@ export default function SignUpPage() {
   };
 
   return (
-    <View className="flex-1 justify-center items-center p-5" style={{ backgroundColor: colors.background }}>
-      <Card style={{ backgroundColor: colors.card }}>
+    <View
+      className="flex-1 justify-center items-center p-5"
+      style={{backgroundColor: colors.background}}
+    >
+      <Card style={{backgroundColor: colors.card}}>
         <TextClassContext.Provider value="text-lg text-foreground">
           <CardHeader>
             <CardTitle>Sign Up</CardTitle>
             <CardDescription>Create a new account</CardDescription>
           </CardHeader>
           <CardContent>
-            <View style={{ gap: 4 }}>
+            <View style={{gap: 4}}>
               <Label nativeID="firstName">First Name</Label>
               <Input
                 id="firstName"
@@ -149,7 +156,7 @@ export default function SignUpPage() {
                 <Text className="text-red-500">{errors.firstName}</Text>
               )}
             </View>
-            <View style={{ gap: 4 }}>
+            <View style={{gap: 4}}>
               <Label nativeID="lastName">Last Name</Label>
               <Input
                 id="lastName"
@@ -161,7 +168,7 @@ export default function SignUpPage() {
                 <Text className="text-red-500">{errors.lastName}</Text>
               )}
             </View>
-            <View style={{ gap: 4 }}>
+            <View style={{gap: 4}}>
               <Label nativeID="email">Email</Label>
               <Input
                 id="email"
@@ -173,7 +180,7 @@ export default function SignUpPage() {
                 <Text className="text-red-500">{errors.email}</Text>
               )}
             </View>
-            <View style={{ gap: 4 }}>
+            <View style={{gap: 4}}>
               <Label nativeID="password">Password</Label>
               <Input
                 id="password"
@@ -186,7 +193,7 @@ export default function SignUpPage() {
                 <Text className="text-red-500">{errors.password}</Text>
               )}
             </View>
-            <View style={{ gap: 4 }}>
+            <View style={{gap: 4}}>
               <Label nativeID="phoneNumber">Phone Number</Label>
               <Input
                 id="phoneNumber"
@@ -199,12 +206,15 @@ export default function SignUpPage() {
               )}
             </View>
             <Button onPress={signUpWithEmail} disabled={loading}>
-                {loading ? <Text>Signing Up...</Text> : <Text>Sign Up</Text>}
+              {loading ? <Text>Signing Up...</Text> : <Text>Sign Up</Text>}
             </Button>
           </CardContent>
           <CardFooter>
-            <Button onPress={() => router.push('/(auth)/loginPage')} disabled={loading}>
-                <Text>Already have an account? Log in</Text>
+            <Button
+              onPress={() => router.push('/(auth)/loginPage')}
+              disabled={loading}
+            >
+              <Text>Already have an account? Log in</Text>
             </Button>
           </CardFooter>
         </TextClassContext.Provider>

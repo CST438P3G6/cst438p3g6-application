@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Alert } from 'react-native';
-import { useTheme } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import { supabase } from '@/utils/supabase';
-import { Button } from '~/components/ui/button';
+import React, {useState} from 'react';
+import {View, Alert} from 'react-native';
+import {useTheme} from '@react-navigation/native';
+import {useRouter} from 'expo-router';
+import {supabase} from '@/utils/supabase';
+import {Button} from '~/components/ui/button';
 import {
   Card,
   CardContent,
@@ -12,12 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Text } from '@/components/ui/text';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Text} from '@/components/ui/text';
 
 export default function LoginPage() {
-  const { colors } = useTheme();
+  const {colors} = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,12 +26,12 @@ export default function LoginPage() {
   const signInWithEmail = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const {error} = await supabase.auth.signInWithPassword({email, password});
       if (error) {
         Alert.alert('Error', (error as Error).message);
       } else {
         console.log('User logged in');
-        router.replace('/(tabs)/homePage');
+        router.replace('/(tabs)/(client)/home');
       }
     } catch (error) {
       Alert.alert('Error', (error as Error).message);
@@ -54,8 +54,8 @@ export default function LoginPage() {
           <CardTitle>Login</CardTitle>
           <CardDescription>Sign in to your account.</CardDescription>
         </CardHeader>
-        <CardContent style={{ gap: 16 }}>
-          <View style={{ gap: 4 }}>
+        <CardContent style={{gap: 16}}>
+          <View style={{gap: 4}}>
             <Label nativeID="email">Email</Label>
             <Input
               id="email"
@@ -64,7 +64,7 @@ export default function LoginPage() {
               placeholder="Enter your email"
             />
           </View>
-          <View style={{ gap: 4 }}>
+          <View style={{gap: 4}}>
             <Label nativeID="password">Password</Label>
             <Input
               id="password"
@@ -79,7 +79,10 @@ export default function LoginPage() {
           <Button onPress={signInWithEmail} disabled={loading}>
             <Text>{loading ? 'Signing in...' : 'Sign In'}</Text>
           </Button>
-          <Button onPress={() => router.push('/(auth)/signupPage')} disabled={loading}>
+          <Button
+            onPress={() => router.push('/(auth)/signupPage')}
+            disabled={loading}
+          >
             <Text>Don't have an account? Sign Up</Text>
           </Button>
         </CardFooter>
