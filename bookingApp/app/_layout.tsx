@@ -8,6 +8,7 @@ import {Platform} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {NAV_THEME} from '~/lib/constants';
 import {useColorScheme} from '~/lib/useColorScheme';
+import {UserContextProvider} from '@/context/UserContext';
 
 const LIGHT_THEME: Theme = {
   dark: false,
@@ -57,9 +58,11 @@ export default function RootLayout() {
   return (
     // this provides the theme to all pages in the app throught slot
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
-      <GestureHandlerRootView style={{flex: 1}}>
-        <Slot />
-      </GestureHandlerRootView>
+      <UserContextProvider>
+        <GestureHandlerRootView style={{flex: 1}}>
+          <Slot />
+        </GestureHandlerRootView>
+      </UserContextProvider>
     </ThemeProvider>
   );
 }

@@ -65,6 +65,7 @@ const SettingsPage: React.FC = () => {
         CommonActions.reset({
           index: 0,
           routes: [{name: 'index'}],
+          // root of the app checks for user login status
         }),
       );
     }

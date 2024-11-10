@@ -1,4 +1,4 @@
-import SettingsPage from '@/components/pages/settingsPage';
+import SettingsPage from '@/app/(tabs)/dev/settingsPage';
 
 const Settings = () => {
   return <SettingsPage />;

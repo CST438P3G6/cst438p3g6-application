@@ -1,4 +1,4 @@
-import ClientHomePage from '@/components/pages/clientHomePage';
+import ClientHomePage from '@/app/(tabs)/dev/clientHomePage';
 
 const Home = () => {
   return <ClientHomePage />;
