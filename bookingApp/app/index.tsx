@@ -24,11 +24,7 @@ export default function Index() {
       return;
     }
 
-    if (profile.isadmin) {
-      router.replace('/(admin)');
-    } else if (profile.isprovider) {
-      router.replace('/(provider)/index');
-    } else {
+    if (user) {
       router.replace('/(client)/home');
     }
   }, [user, profile, loading]);

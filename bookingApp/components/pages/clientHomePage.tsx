@@ -1,15 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, TextInput, FlatList, Button } from 'react-native';
-import { Text } from '@/components/ui/text';
-import { supabase } from '@/utils/supabase';
+import React, {useEffect, useState} from 'react';
+import {View, ScrollView, TextInput, FlatList, Button} from 'react-native';
+import {Text} from '@/components/ui/text';
+import {supabase} from '@/utils/supabase';
 
-const SearchBar = ({ searchQuery, setSearchQuery }) => (
+interface SearchBarProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({searchQuery, setSearchQuery}) => (
   <View className="mt-4 p-2 border rounded-md bg-gray-100">
     <TextInput
       placeholder="Search for services, locations..."
       value={searchQuery}
       onChangeText={setSearchQuery}
-      style={{ padding: 10 }}
+      style={{padding: 10}}
       className="text-gray-600"
     />
   </View>
@@ -24,7 +29,7 @@ function Home() {
   useEffect(() => {
     const fetchBusinesses = async () => {
       setLoading(true);
-      const { data, error } = await supabase.from('business').select('*');
+      const {data, error} = await supabase.from('business').select('*');
       if (error) {
         setError(error.message);
       } else {
@@ -37,8 +42,10 @@ function Home() {
   }, []);
 
   // Query
-  const filteredBusinesses = businesses.filter(business =>
-    typeof business.name === 'string' && business.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredBusinesses = businesses.filter(
+    (business) =>
+      typeof business.name === 'string' &&
+      business.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) return <Text>Loading...</Text>;
@@ -46,7 +53,7 @@ function Home() {
 
   return (
     <ScrollView className="flex-1 p-4 bg-white">
-      <View className='flex-1 justify-center'>
+      <View className="flex-1 justify-center">
         <Text>LARGE LOGO OF SOME KIND</Text>
       </View>
 
@@ -61,7 +68,7 @@ function Home() {
           <FlatList
             data={filteredBusinesses}
             keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
+            renderItem={({item}) => (
               <View className="p-4 border rounded-md bg-gray-200 mb-2 flex-row justify-between items-center">
                 <View>
                   <Text className="font-bold">{item.name}</Text>
@@ -80,15 +87,19 @@ function Home() {
           />
         </View>
       )}
-      
+
       <View className="mb-6">
-        <Text className="text-lg font-bold mb-4">Recommended (maybe grabs random businesses)</Text>
+        <Text className="text-lg font-bold mb-4">
+          Recommended (maybe grabs random businesses)
+        </Text>
         <View className="h-32 rounded-md bg-gray-200 mb-4" />
         <View className="h-32 rounded-md bg-gray-200" />
       </View>
 
       <View className="mb-6">
-        <Text className="text-lg font-bold mb-4">Upcoming Booking (probably the first booking)</Text>
+        <Text className="text-lg font-bold mb-4">
+          Upcoming Booking (probably the first booking)
+        </Text>
         <View className="h-24 rounded-md bg-gray-200" />
       </View>
     </ScrollView>
