@@ -80,25 +80,23 @@ export default function TabLayout() {
         tabBarIcon: ({color}) => <Users size={24} color={color} />,
       }}
     />,
-    isAdmin && (
-      <Tabs.Screen
-        key="viewProfiles"
-        name="(admin)/viewProfiles"
-        options={{
-          title: 'Profiles',
-        }}
-      />
-    ),
-    isProvider && (
-      <Tabs.Screen
-        key="viewAllBusinessesPage"
-        name="(provider)/viewAllBusinessesPage"
-        options={{
-          title: 'Businesses',
-          tabBarIcon: ({color}) => <Users size={24} color={color} />,
-        }}
-      />
-    ),
+    <Tabs.Screen
+      key="viewProfiles"
+      name="(admin)/viewProfiles"
+      options={{
+        title: 'Profiles',
+      }}
+      redirect={!isAdmin}
+    />,
+    <Tabs.Screen
+      key="viewAllBusinessesPage"
+      name="(provider)/viewAllBusinessesPage"
+      options={{
+        title: 'Businesses',
+        tabBarIcon: ({color}) => <Users size={24} color={color} />,
+      }}
+      redirect={!isProvider}
+    />,
     <Tabs.Screen
       key="settings"
       name="settings"
