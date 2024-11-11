@@ -43,6 +43,7 @@ export function useViewRebookStatus() {
 
             if (businessError) throw new Error(businessError.message);
 
+
             const { is_active: isBusinessActive } = business;
 
 
