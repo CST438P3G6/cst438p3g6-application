@@ -2,6 +2,7 @@ import {Tabs} from 'expo-router';
 import {useEffect, useState} from 'react';
 import {supabase} from '@/utils/supabase';
 import {Home, Calendar, Settings, Users} from 'lucide-react-native';
+//TODO import theme from the theme thing
 
 export default function TabLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -58,7 +59,7 @@ export default function TabLayout() {
   const tabScreens = [
     <Tabs.Screen
       key="home"
-      name="(client)/home"
+      name="home"
       options={{
         title: 'Home',
         tabBarIcon: ({color}) => <Home size={24} color={color} />,
@@ -66,7 +67,7 @@ export default function TabLayout() {
     />,
     <Tabs.Screen
       key="appointments"
-      name="(client)/appointments"
+      name="appointments"
       options={{
         title: 'Appointments',
         tabBarIcon: ({color}) => <Calendar size={24} color={color} />,
@@ -74,25 +75,25 @@ export default function TabLayout() {
     />,
     <Tabs.Screen
       key="business"
-      name="(client)/business"
+      name="business"
       options={{
         title: 'Business',
         tabBarIcon: ({color}) => <Users size={24} color={color} />,
       }}
     />,
     <Tabs.Screen
-      key="viewProfiles"
-      name="(admin)/viewProfiles"
+      key="Admin"
+      name="admin"
       options={{
-        title: 'Profiles',
+        title: 'Admin',
       }}
       redirect={!isAdmin}
     />,
     <Tabs.Screen
-      key="viewAllBusinessesPage"
-      name="(provider)/viewAllBusinessesPage"
+      key="Provider"
+      name="provider"
       options={{
-        title: 'Businesses',
+        title: 'Provider',
         tabBarIcon: ({color}) => <Users size={24} color={color} />,
       }}
       redirect={!isProvider}
