@@ -7,10 +7,6 @@ export default function Layout() {
         name="index"
         options={{
           title: 'My Appointments',
-          headerStyle: {
-            backgroundColor: '#f4511e',
-          },
-          headerTintColor: '#fff',
         }}
       />
     </Stack>

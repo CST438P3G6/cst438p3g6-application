@@ -105,7 +105,7 @@ export function UserContextProvider({children}: {children: React.ReactNode}) {
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/loginPage');
     } else if (user && inAuthGroup) {
-      router.replace('/home');
+      router.replace('/(tabs)/home');
     }
   }, [user, loading, segments]);
 

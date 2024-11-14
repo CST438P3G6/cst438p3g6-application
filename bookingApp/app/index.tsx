@@ -25,7 +25,7 @@ export default function Index() {
     }
 
     if (user) {
-      router.replace('/(client)/home');
+      router.replace('/home');
     }
   }, [user, profile, loading]);
 

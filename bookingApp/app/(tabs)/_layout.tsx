@@ -74,14 +74,6 @@ export default function TabLayout() {
       }}
     />,
     <Tabs.Screen
-      key="business"
-      name="business"
-      options={{
-        title: 'Business',
-        tabBarIcon: ({color}) => <Users size={24} color={color} />,
-      }}
-    />,
-    <Tabs.Screen
       key="Admin"
       name="admin"
       options={{
