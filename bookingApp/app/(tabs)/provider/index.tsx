@@ -6,9 +6,10 @@ import {Plus, Eye, Trash2, Settings} from 'lucide-react-native';
 import {useUserBusinesses} from '@/hooks/useUserBusiness';
 import {useLoggedInUserProfile} from '@/hooks/useLoggedInUserProfile';
 import {supabase} from '@/utils/supabase';
+import {useFocusEffect} from '@react-navigation/native';
 
 interface Business {
-  id: number;
+  id: string;
   name: string;
   description: string;
   phone_number: string;
@@ -18,79 +19,64 @@ interface Business {
   email: string;
 }
 
-interface BusinessHours {
-  business_id: number;
-  day: string;
-  open_time: string;
-  close_time: string;
-}
-
-interface BusinessImage {
-  id: number;
-  business_id: number;
-  image_url: string;
-}
-
 export default function BusinessPage() {
   const router = useRouter();
   const {profile} = useLoggedInUserProfile();
-  const [businessHours, setBusinessHours] = useState<
-    Record<number, BusinessHours[]>
-  >({});
-  const [businessImages, setBusinessImages] = useState<
-    Record<number, BusinessImage[]>
-  >({});
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [refresh, setRefresh] = useState(false);
+
+  const fetchData = async () => {
+    const {data: fetchedData, error: fetchError} = await supabase
+      .from('businesses')
+      .select('*')
+      .eq('user_id', profile?.id || null);
+
+    if (fetchError) {
+      console.error(fetchError);
+    } else {
+      setBusinesses(fetchedData as unknown as Business[]);
+    }
+  };
+
   const {
-    businesses,
+    businesses: userBusinesses,
     loading,
-    error: businessesError,
+    error,
   } = useUserBusinesses(profile?.id || null);
 
   useEffect(() => {
-    if (!businesses?.length) return;
+    if (!loading && !error) {
+      setBusinesses(userBusinesses);
+    }
+  }, [businesses, loading, error]);
 
-    const fetchBusinessDetails = async () => {
-      const businessIds = businesses.map((b) => b.id);
+  useFocusEffect(
+    React.useCallback(() => {
+      setRefresh(true);
+    }, []),
+  );
 
-      const {data: hoursData} = await supabase
-        .from('business_hours')
-        .select('*')
-        .in('business_id', businessIds);
+  useEffect(() => {
+    if (refresh) {
+      fetchData();
+      setRefresh(false);
+    }
+  }, [refresh]);
 
-      if (hoursData) {
-        const hoursByBusiness = hoursData.reduce((acc, hour) => {
-          acc[hour.business_id] = [...(acc[hour.business_id] || []), hour];
-          return acc;
-        }, {} as Record<number, BusinessHours[]>);
-        setBusinessHours(hoursByBusiness);
-      }
-
-      const {data: imageData} = await supabase
-        .from('business_images')
-        .select('*')
-        .in('business_id', businessIds);
-
-      if (imageData) {
-        const imagesByBusiness = imageData.reduce((acc, image) => {
-          acc[image.business_id] = [...(acc[image.business_id] || []), image];
-          return acc;
-        }, {} as Record<number, BusinessImage[]>);
-        setBusinessImages(imagesByBusiness);
-      }
-    };
-
-    fetchBusinessDetails();
-  }, [businesses]);
+  const refetchData = () => {
+    fetchData();
+  };
 
   const handleDeleteBusiness = async (businessId: number) => {
     try {
       const {error} = await supabase
-        .from('business')
+        .from('businesses')
         .delete()
         .eq('id', businessId);
 
       if (error) throw error;
       Alert.alert('Success', 'Business deleted successfully');
+      refetchData();
     } catch (error) {
       Alert.alert('Error', 'Failed to delete business');
     }
@@ -101,14 +87,20 @@ export default function BusinessPage() {
       <Text className="text-lg font-semibold">{item.name}</Text>
       <View className="flex-row space-x-4 mt-4">
         <TouchableOpacity
-          onPress={() => router.push(`/business/${item.id}`)}
+          onPress={() => {
+            router.push(`/business/${item.id}`);
+            refetchData();
+          }}
           className="p-2 bg-gray-200 rounded-full"
         >
           <Eye size={20} />
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push(`/provider/editBusiness/${item.id}`)}
+          onPress={() => {
+            router.push(`/provider/editBusiness/${item.id}`);
+            refetchData();
+          }}
           className="p-2 bg-blue-200 rounded-full"
         >
           <Settings size={20} color="#2196F3" />
@@ -135,10 +127,8 @@ export default function BusinessPage() {
         <Text className="ml-2 text-base text-blue-500">Create Business</Text>
       </TouchableOpacity>
 
-      {loading ? (
+      {businesses.length === 0 ? (
         <Text>Loading...</Text>
-      ) : businessesError ? (
-        <Text>Error loading businesses: {businessesError}</Text>
       ) : (
         <FlatList
           data={businesses}
