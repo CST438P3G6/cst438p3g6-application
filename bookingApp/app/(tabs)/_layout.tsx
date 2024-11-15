@@ -82,6 +82,14 @@ export default function TabLayout() {
       redirect={!isAdmin}
     />,
     <Tabs.Screen
+      key="business/[id]"
+      name="business/[id]"
+      options={{
+        title: 'Business Details',
+      }}
+      redirect={!true}
+    />,
+    <Tabs.Screen
       key="Provider"
       name="provider"
       options={{

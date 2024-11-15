@@ -31,7 +31,7 @@ export default function LoginPage() {
         Alert.alert('Error', (error as Error).message);
       } else {
         console.log('User logged in');
-        router.replace('/(tabs)/(client)/home');
+        router.replace('/(tabs)/home');
       }
     } catch (error) {
       Alert.alert('Error', (error as Error).message);

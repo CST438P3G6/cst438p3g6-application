@@ -110,17 +110,6 @@ export function UserContextProvider({children}: {children: React.ReactNode}) {
   }, [user, loading, segments]);
 
   useEffect(() => {
-    console.log({
-      contextData: {
-        user,
-        session,
-        loading,
-        currentSegment: segments[0],
-      },
-    });
-  }, [user, session, loading, segments]);
-
-  useEffect(() => {
     async function fetchProfile() {
       if (!user) {
         setProfile(null);
@@ -191,7 +180,6 @@ export function UserContextProvider({children}: {children: React.ReactNode}) {
     updateProfile,
   };
 
-  console.log({value});
   // here we print all the stuff that is in the UserContext and basically I am wrapping the session in the context
 
   // Provide the context value to all child components so the rest of the app
