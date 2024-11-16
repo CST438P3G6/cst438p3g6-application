@@ -105,20 +105,9 @@ export function UserContextProvider({children}: {children: React.ReactNode}) {
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/loginPage');
     } else if (user && inAuthGroup) {
-      router.replace('/(client)/home');
+      router.replace('/(tabs)/home');
     }
   }, [user, loading, segments]);
-
-  useEffect(() => {
-    console.log({
-      contextData: {
-        user,
-        session,
-        loading,
-        currentSegment: segments[0],
-      },
-    });
-  }, [user, session, loading, segments]);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -191,7 +180,6 @@ export function UserContextProvider({children}: {children: React.ReactNode}) {
     updateProfile,
   };
 
-  console.log({value});
   // here we print all the stuff that is in the UserContext and basically I am wrapping the session in the context
 
   // Provide the context value to all child components so the rest of the app

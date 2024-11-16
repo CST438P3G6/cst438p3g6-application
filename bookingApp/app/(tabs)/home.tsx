@@ -1,3 +1,4 @@
+// ok this home page wont have subpages. but is the entry point of (tabs)/
 import React, {useEffect, useState} from 'react';
 import {View, ScrollView, TextInput, FlatList, Button, Pressable} from 'react-native';
 import {Text} from '@/components/ui/text';
