@@ -1,5 +1,6 @@
 {
   "expo": {
+    "newArchEnabled": true,
     "name": "bookingApp",
     "slug": "bookingApp",
     "version": "1.0.0",

@@ -1,10 +1,15 @@
 import React, {useState} from 'react';
-import {View, Alert} from 'react-native';
-import {Text} from '@/components/ui/text';
-import {Input} from '@/components/ui/input';
-import {Button} from '@/components/ui/button';
+import {
+  View,
+  Alert,
+  TextInput,
+  Button,
+  Text,
+  ActivityIndicator,
+} from 'react-native';
 import {useRouter} from 'expo-router';
 import {useCreateBusiness} from '@/hooks/useCreateBusiness';
+import {CheckCircle, XCircle} from 'lucide-react-native';
 
 export default function CreateBusiness() {
   const router = useRouter();
@@ -22,12 +27,13 @@ export default function CreateBusiness() {
       phone_number: phoneNumber,
       address,
       email,
+      is_active: true,
     };
     const {data, error} = await createBusiness(business);
     if (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error, [{text: 'OK'}]);
     } else {
-      Alert.alert('Success', 'Business created successfully');
+      Alert.alert('Success', 'Business created successfully', [{text: 'OK'}]);
       router.push('/provider');
     }
   };
@@ -35,23 +41,30 @@ export default function CreateBusiness() {
   return (
     <View>
       <Text>Create Business</Text>
-      <Input placeholder="Name" value={name} onChangeText={setName} />
-      <Input
+      <TextInput placeholder="Name" value={name} onChangeText={setName} />
+      <TextInput
         placeholder="Description"
         value={description}
         onChangeText={setDescription}
       />
-      <Input
+      <TextInput
         placeholder="Phone Number"
         value={phoneNumber}
         onChangeText={setPhoneNumber}
       />
-      <Input placeholder="Address" value={address} onChangeText={setAddress} />
-      <Input placeholder="Email" value={email} onChangeText={setEmail} />
-      <Button onPress={handleCreateBusiness} disabled={loading}>
-        {loading ? 'Creating...' : 'Create Business'}
-      </Button>
-      {error && <Text>{error.message}</Text>}
+      <TextInput
+        placeholder="Address"
+        value={address}
+        onChangeText={setAddress}
+      />
+      <TextInput placeholder="Email" value={email} onChangeText={setEmail} />
+      <Button
+        onPress={handleCreateBusiness}
+        disabled={loading}
+        title={loading ? 'Creating...' : 'Create Business'}
+      />
+      {loading && <ActivityIndicator />}
+      {error && <Text>{error}</Text>}
     </View>
   );
 }

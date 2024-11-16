@@ -1,128 +1,68 @@
 import React, {useState} from 'react';
-import {View, Alert} from 'react-native';
-import {useTheme} from '@react-navigation/native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  Switch,
+} from 'react-native';
 import {useRouter} from 'expo-router';
 import {supabase} from '@/utils/supabase';
-import {Button} from '~/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {Input} from '@/components/ui/input';
-import {Label} from '@/components/ui/label';
-import {Text, TextClassContext} from '@/components/ui/text';
+import {UserPlus, Mail, Lock, User, Phone} from 'lucide-react-native';
 
 export default function SignUpPage() {
-  const {colors} = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isProvider, setIsProvider] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
   const router = useRouter();
 
   const signUpWithEmail = async () => {
     setLoading(true);
-    let validationErrors: {[key: string]: string} = {};
-
-    if (!firstName) {
-      validationErrors.firstName = 'First name is required';
-    }
-    if (!lastName) {
-      validationErrors.lastName = 'Last name is required';
-    }
-    if (!email) {
-      validationErrors.email = 'Email is required';
-    }
-    if (!password) {
-      validationErrors.password = 'Password is required';
-    }
-    if (!phoneNumber) {
-      validationErrors.phoneNumber = 'Phone number is required';
-    }
-
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const {data, error} = await supabase.auth.signUp({
+      const {
+        data: {user},
+        error,
+      } = await supabase.auth.signUp({
         email,
         password,
       });
-      const user = data.user;
 
       if (error) {
-        if (
-          error.message.includes('Password should be at least 6 characters')
-        ) {
-          setErrors({password: 'Password should be at least 6 characters'});
-        } else if (error.message.includes('Unable to validate email address')) {
-          setErrors({
-            email: 'Unable to validate email address: invalid format',
-          });
-        } else {
-          console.error('Signup error:', error);
-          Alert.alert('Error', error.message);
-        }
-      } else if (user) {
-        const {data: profileData, error: profileFetchError} = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
+        Alert.alert('Error', error.message);
+        return;
+      }
 
-        if (profileFetchError && profileFetchError.code !== 'PGRST116') {
-          console.error('Profile fetch error:', profileFetchError);
-          Alert.alert('Error', profileFetchError.message);
-        } else if (profileData) {
-          const {error: profileUpdateError} = await supabase
-            .from('profiles')
-            .update({
+      if (user) {
+        const {error: profileInsertError} = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: user.id,
               first_name: firstName,
               last_name: lastName,
+              email: email,
               phone_number: phoneNumber,
-            })
-            .eq('id', user.id);
+              isadmin: isAdmin,
+              isprovider: isProvider,
+              is_active: true,
+            },
+          ]);
 
-          if (profileUpdateError) {
-            console.error('Profile update error:', profileUpdateError);
-            Alert.alert('Error', profileUpdateError.message);
-          } else {
-            console.log('User signed up and profile updated');
-            router.replace('/(tabs)/(client)/home');
-          }
+        if (profileInsertError) {
+          console.error('Profile creation error:', profileInsertError);
+          Alert.alert('Error', profileInsertError.message);
         } else {
-          const {error: profileInsertError} = await supabase
-            .from('profiles')
-            .insert([
-              {
-                id: user.id, // Use the user ID from the auth table
-                first_name: firstName,
-                last_name: lastName,
-                phone_number: phoneNumber,
-              },
-            ]);
-
-          if (profileInsertError) {
-            console.error('Profile creation error:', profileInsertError);
-            Alert.alert('Error', profileInsertError.message);
-          } else {
-            console.log('User signed up and profile created');
-            router.replace('/(tabs)/homePage');
-          }
+          console.log('User signed up and profile created');
+          router.replace('/(tabs)/home');
         }
-      } else {
-        console.error('User is null');
-        Alert.alert('Error', 'User is null');
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -133,92 +73,188 @@ export default function SignUpPage() {
   };
 
   return (
-    <View
-      className="flex-1 justify-center items-center p-5"
-      style={{backgroundColor: colors.background}}
-    >
-      <Card style={{backgroundColor: colors.card}}>
-        <TextClassContext.Provider value="text-lg text-foreground">
-          <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
-            <CardDescription>Create a new account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <View style={{gap: 4}}>
-              <Label nativeID="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChangeText={setFirstName}
-                placeholder="Enter your first name"
-              />
-              {errors.firstName && (
-                <Text className="text-red-500">{errors.firstName}</Text>
-              )}
-            </View>
-            <View style={{gap: 4}}>
-              <Label nativeID="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChangeText={setLastName}
-                placeholder="Enter your last name"
-              />
-              {errors.lastName && (
-                <Text className="text-red-500">{errors.lastName}</Text>
-              )}
-            </View>
-            <View style={{gap: 4}}>
-              <Label nativeID="email">Email</Label>
-              <Input
-                id="email"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-              />
-              {errors.email && (
-                <Text className="text-red-500">{errors.email}</Text>
-              )}
-            </View>
-            <View style={{gap: 4}}>
-              <Label nativeID="password">Password</Label>
-              <Input
-                id="password"
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter your password"
-                secureTextEntry
-              />
-              {errors.password && (
-                <Text className="text-red-500">{errors.password}</Text>
-              )}
-            </View>
-            <View style={{gap: 4}}>
-              <Label nativeID="phoneNumber">Phone Number</Label>
-              <Input
-                id="phoneNumber"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                placeholder="Enter your phone number"
-              />
-              {errors.phoneNumber && (
-                <Text className="text-red-500">{errors.phoneNumber}</Text>
-              )}
-            </View>
-            <Button onPress={signUpWithEmail} disabled={loading}>
-              {loading ? <Text>Signing Up...</Text> : <Text>Sign Up</Text>}
-            </Button>
-          </CardContent>
-          <CardFooter>
-            <Button
-              onPress={() => router.push('/(auth)/loginPage')}
-              disabled={loading}
-            >
-              <Text>Already have an account? Log in</Text>
-            </Button>
-          </CardFooter>
-        </TextClassContext.Provider>
-      </Card>
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <View style={styles.header}>
+          <UserPlus size={32} color="#000" style={styles.headerIcon} />
+          <Text style={styles.title}>Sign Up</Text>
+          <Text style={styles.description}>Create your account</Text>
+        </View>
+
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <User size={20} color="#666" />
+            <TextInput
+              placeholder="First Name"
+              value={firstName}
+              style={styles.input}
+              onChangeText={setFirstName}
+              placeholder="Enter your first name"
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Mail size={20} color="#666" />
+            <TextInput
+              placeholder="Email"
+              value={email}
+              style={styles.input}
+              onChangeText={setEmail}
+              placeholder="Enter your email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Lock size={20} color="#666" />
+            <TextInput
+              placeholder="Password"
+              value={password}
+              style={styles.input}
+              onChangeText={setPassword}
+              placeholder="Enter your password"
+              secureTextEntry
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Phone size={20} color="#666" />
+            <TextInput
+              placeholder="Phone Number"
+              value={phoneNumber}
+              style={styles.input}
+              onChangeText={setPhoneNumber}
+              placeholder="Enter your phone number"
+              keyboardType="phone-pad"
+            />
+          </View>
+        </View>
+
+        <View style={styles.toggleContainer}>
+          <Text style={styles.label}>Admin Access</Text>
+          <Switch
+            value={isAdmin}
+            onValueChange={setIsAdmin}
+            trackColor={{false: '#767577', true: '#81b0ff'}}
+          />
+        </View>
+
+        <View style={styles.toggleContainer}>
+          <Text style={styles.label}>Provider Access</Text>
+          <Switch
+            value={isProvider}
+            onValueChange={setIsProvider}
+            trackColor={{false: '#767577', true: '#81b0ff'}}
+          />
+        </View>
+
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={signUpWithEmail}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Sign Up</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => router.push('/(auth)/loginPage')}
+          >
+            <Text style={styles.linkText}>
+              Already have an account? Sign In
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#f5f5f5',
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    elevation: 3,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  description: {
+    fontSize: 16,
+    color: '#666',
+  },
+  inputContainer: {
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  input: {
+    flex: 1,
+    padding: 12,
+    fontSize: 16,
+  },
+  footer: {
+    marginTop: 24,
+    gap: 12,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  linkButton: {
+    alignItems: 'center',
+    padding: 8,
+  },
+  linkText: {
+    color: '#007AFF',
+    fontSize: 14,
+  },
+  headerIcon: {
+    marginBottom: 16,
+    alignSelf: 'center',
+  },
+});

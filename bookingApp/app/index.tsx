@@ -1,8 +1,7 @@
 import React from 'react';
-import {View, ActivityIndicator} from 'react-native';
+import {View, ActivityIndicator, Text} from 'react-native';
 import {useUser} from '@/context/UserContext';
 import {useRouter} from 'expo-router';
-import {Text} from '@/components/ui/text';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 export default function Index() {
@@ -25,7 +24,7 @@ export default function Index() {
     }
 
     if (user) {
-      router.replace('/home');
+      router.replace('/(tabs)/home');
     }
   }, [user, profile, loading]);
 

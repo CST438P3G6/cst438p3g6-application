@@ -1,26 +1,17 @@
-// ok this home page wont have subpages. but is the entry point of (tabs)/
 import React, {useEffect, useState} from 'react';
-import {View, ScrollView, TextInput, FlatList, Button, Pressable} from 'react-native';
-import {Text} from '@/components/ui/text';
-import {supabase} from '@/utils/supabase';
+import {
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  Pressable,
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+} from 'react-native';
 import {useRouter} from 'expo-router';
-
-interface SearchBarProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-}
-
-const SearchBar: React.FC<SearchBarProps> = ({searchQuery, setSearchQuery}) => (
-  <View className="mt-4 p-2 border rounded-md bg-gray-100">
-    <TextInput
-      placeholder="Search for services, locations..."
-      value={searchQuery}
-      onChangeText={setSearchQuery}
-      style={{padding: 10}}
-      className="text-gray-600"
-    />
-  </View>
-);
+import {supabase} from '@/utils/supabase';
+import {Search} from 'lucide-react-native';
 
 interface Business {
   id: string;
@@ -29,106 +20,126 @@ interface Business {
   image?: string;
 }
 
-function Home() {
+export default function Home() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchBusinesses = async () => {
-      setLoading(true);
-      const {data, error} = await supabase.from('business').select('*');
-      if (error) {
-        setError(error.message);
-      } else {
-        setBusinesses(data || []);
-      }
-      setLoading(false);
-    };
-
     fetchBusinesses();
   }, []);
 
-  //the search
-  const filteredBusinesses = businesses.filter(
-    (business) =>
-      typeof business.name === 'string' &&
-      business.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const handleMakeAppointment = (business: Business) => {
-    // Navigate to the Appointments screen and pass the business details
-    router.push({
-      pathname: '/appointments',
-      params: {businessName: business.name, businessId: business.id},
-    });
+  const fetchBusinesses = async () => {
+    try {
+      setLoading(true);
+      const {data, error} = await supabase.from('business').select('*');
+      if (error) throw error;
+      setBusinesses(data || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const BusinessItem = ({item}: {item: Business}) => (
-    <View className="p-4 bg-white rounded-lg shadow-sm mb-4">
-      <View className="flex-row justify-between items-center">
-        <View>
-          <Text className="text-lg font-semibold">{item.name}</Text>
-          <Text className="text-gray-600">{item.phone_number}</Text>
-        </View>
-        <Pressable
-          className="bg-blue-500 px-4 py-2 rounded-lg"
-          onPress={() => handleMakeAppointment(item)}
-        >
-          <Text className="text-white">Book Now</Text>
-        </Pressable>
-      </View>
-    </View>
+  const filteredBusinesses = businesses.filter((business) =>
+    business.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  if (loading) return <Text>Loading...</Text>;
-  if (error) return <Text>Error loading businesses: {error}</Text>;
+  const renderBusinessCard = (business: Business) => (
+    <Pressable
+      key={business.id}
+      style={styles.card}
+      onPress={() => router.push(`/business/${business.id}`)}
+    >
+      {business.image && (
+        <Image source={{uri: business.image}} style={styles.businessImage} />
+      )}
+      <View style={styles.businessInfo}>
+        <Text style={styles.businessName}>{business.name}</Text>
+        <Text style={styles.phoneNumber}>{business.phone_number}</Text>
+      </View>
+    </Pressable>
+  );
 
   return (
-    <ScrollView className="flex-1 bg-gray-50 p-4">
-      <View className="mb-6">
-        <Text className="text-lg font-bold mb-4">Business Search</Text>
-        <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-      </View>
-
-      {searchQuery.trim() !== '' && (
-        <View className="mb-6">
-          <Text className="text-lg font-bold mb-4">Search Results</Text>
-          <FlatList
-            data={filteredBusinesses}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({item}) => (
-              <View className="p-4 border rounded-md bg-gray-200 mb-2 flex-row justify-between items-center">
-                <View>
-                  <Text className="font-bold">{item.name}</Text>
-                  <Text>{item.phone_number}</Text>
-                </View>
-                <Button
-                  title="Make an Appointment"
-                  onPress={() => handleMakeAppointment(item)}
-                />
-              </View>
-            )}
-            ListEmptyComponent={<Text>No results found.</Text>}
-          />
-        </View>
-      )}
-
-      <View className="mb-6">
-        <Text className="text-lg font-bold mb-4">Recommended Businesses</Text>
-        <FlatList
-          data={businesses.slice(0, 2)} //want to randomise the businesses next instead of showing first 2
-          renderItem={({item}) => <BusinessItem item={item} />}
-          keyExtractor={(item) => item.id.toString()}
-          ListEmptyComponent={<Text className="text-center text-gray-500">No recommended businesses</Text>}
+    <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <Search size={20} color="#666" />
+        <TextInput
+          placeholder="Search businesses..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={styles.searchInput}
         />
       </View>
 
-    </ScrollView>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : (
+        <ScrollView style={styles.businessList}>
+          {filteredBusinesses.map(renderBusinessCard)}
+        </ScrollView>
+      )}
+    </View>
   );
 }
 
-export default Home;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 16,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+  },
+  businessList: {
+    flex: 1,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    elevation: 5,
+    flexDirection: 'row',
+  },
+  businessImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 12,
+  },
+  businessInfo: {
+    flex: 1,
+  },
+  businessName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  phoneNumber: {
+    fontSize: 14,
+    color: '#666',
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+});

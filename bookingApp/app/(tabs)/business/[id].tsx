@@ -1,8 +1,15 @@
 import React, {useState, useEffect} from 'react';
-import {View, ScrollView, Alert, ActivityIndicator} from 'react-native';
+import {
+  View,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Button,
+} from 'react-native';
 import {useLocalSearchParams, router} from 'expo-router';
-import {Text} from '@/components/ui/text';
-import {Button} from '@/components/ui/button';
 import {supabase} from '@/utils/supabase';
 import {
   Star,
@@ -38,8 +45,20 @@ interface Review {
   user_id: string;
 }
 
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: '#3b82f6',
+    padding: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+});
+
 export default function BusinessDetails() {
-  const {id} = useLocalSearchParams();
+  const {id} = useLocalSearchParams<{id: string}>();
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -55,9 +74,19 @@ export default function BusinessDetails() {
       setLoading(true);
 
       const [businessData, servicesData, reviewsData] = await Promise.all([
-        supabase.from('business').select('*').eq('id', id).single(),
-        supabase.from('service').select('*').eq('business_id', id),
-        supabase.from('reviews').select('*').eq('business_id', id),
+        supabase
+          .from('business')
+          .select<'business', Business>('*')
+          .eq('id', id)
+          .single(),
+        supabase
+          .from('service')
+          .select<'service', Service>('*')
+          .eq('business_id', id),
+        supabase
+          .from('reviews')
+          .select<'reviews', Review>('*')
+          .eq('business_id', id),
       ]);
 
       if (businessData.error) throw businessData.error;
@@ -117,7 +146,7 @@ export default function BusinessDetails() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -125,7 +154,7 @@ export default function BusinessDetails() {
 
   if (!business) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View>
         <Text>Business not found</Text>
       </View>
     );
@@ -136,38 +165,34 @@ export default function BusinessDetails() {
     : 0;
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="p-4">
-        {/* Business Info */}
-        <View className="bg-white rounded-lg p-4 mb-4 shadow-sm">
-          <Text className="text-2xl font-bold">{business.name}</Text>
-          <Text className="text-gray-600 mt-2">{business.description}</Text>
+    <ScrollView>
+      <View>
+        <View>
+          <Text>{business.name}</Text>
+          <Text>{business.description}</Text>
 
-          <View className="mt-4 space-y-2">
-            <View className="flex-row items-center">
-              <Phone size={20} className="text-gray-500 mr-2" />
+          <View>
+            <View>
+              <Phone size={20} />
               <Text>{business.phone_number}</Text>
             </View>
-            <View className="flex-row items-center">
-              <Mail size={20} className="text-gray-500 mr-2" />
+            <View>
+              <Mail size={20} />
               <Text>{business.email}</Text>
             </View>
-            <View className="flex-row items-center">
-              <MapPin size={20} className="text-gray-500 mr-2" />
+            <View>
+              <MapPin size={20} />
               <Text>{business.address}</Text>
             </View>
           </View>
         </View>
 
         {/* Services */}
-        <View className="mb-4">
-          <Text className="text-xl font-bold mb-2">Services</Text>
+        <View>
+          <Text>Services</Text>
           {services.map((service) => (
-            <View
-              key={service.id}
-              className="bg-white p-4 rounded-lg mb-2 shadow-sm"
-            >
-              <Text className="font-semibold text-lg">{service.name}</Text>
+            <View key={service.id}>
+              <Text>{service.name}</Text>
               <Text className="text-gray-600">{service.description}</Text>
               <View className="flex-row mt-2 space-x-4">
                 <View className="flex-row items-center">
@@ -212,21 +237,40 @@ export default function BusinessDetails() {
           ))}
         </View>
 
-        {/* Action Buttons */}
-        <View className="space-y-2 mb-4">
-          <Button
-            onPress={() => router.push(`/booking/${id}`)}
-            className="w-full"
+        <View style={{marginBottom: 16}}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              router.push({
+                pathname: '/booking/[id]',
+                params: {id},
+              })
+            }
           >
-            Book Appointment
-          </Button>
-          <Button
-            variant="outline"
-            onPress={() => router.push(`/contact/${id}`)}
-            className="w-full"
+            <Text style={{color: 'white', fontWeight: '600'}}>
+              Book Appointment
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              {
+                backgroundColor: 'transparent',
+                borderWidth: 1,
+                borderColor: '#3b82f6',
+              },
+            ]}
+            onPress={() =>
+              router.push({
+                pathname: '/contact/[id]',
+                params: {id},
+              })
+            }
           >
-            Contact Business
-          </Button>
+            <Text style={{color: '#3b82f6', fontWeight: '600'}}>
+              Contact Business
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>
