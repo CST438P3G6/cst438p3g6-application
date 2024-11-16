@@ -1,13 +1,6 @@
 // ok this home page wont have subpages. but is the entry point of (tabs)/
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  ScrollView,
-  TextInput,
-  FlatList,
-  Button,
-  Pressable,
-} from 'react-native';
+import {View, ScrollView, TextInput, FlatList, Button, Pressable} from 'react-native';
 import {Text} from '@/components/ui/text';
 import {supabase} from '@/utils/supabase';
 import {useRouter} from 'expo-router';
@@ -36,25 +29,13 @@ interface Business {
   image?: string;
 }
 
-interface Appointment {
-  id: string;
-  businessName: string;
-  date: string;
-  time: string;
-}
-
 function Home() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [recommendedBusinesses, setRecommendedBusinesses] = React.useState<
-    Business[]
-  >([]);
-  const [nextAppointment, setNextAppointment] =
-    React.useState<Appointment | null>(null);
-  const [businesses, setBusinesses] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBusinesses = async () => {
@@ -63,7 +44,7 @@ function Home() {
       if (error) {
         setError(error.message);
       } else {
-        setBusinesses(data);
+        setBusinesses(data || []);
       }
       setLoading(false);
     };
@@ -71,7 +52,7 @@ function Home() {
     fetchBusinesses();
   }, []);
 
-  // Query
+  //the search
   const filteredBusinesses = businesses.filter(
     (business) =>
       typeof business.name === 'string' &&
@@ -79,9 +60,10 @@ function Home() {
   );
 
   const handleMakeAppointment = (business: Business) => {
+    // Navigate to the Appointments screen and pass the business details
     router.push({
-      pathname: '/booking',
-      params: {businessId: business.id},
+      pathname: '/appointments',
+      params: {businessName: business.name, businessId: business.id},
     });
   };
 
@@ -107,42 +89,8 @@ function Home() {
 
   return (
     <ScrollView className="flex-1 bg-gray-50 p-4">
-      <FlatList
-        data={recommendedBusinesses}
-        renderItem={({item}) => <BusinessItem item={item} />}
-        ListEmptyComponent={
-          <Text className="text-center text-gray-500">No businesses found</Text>
-        }
-        className="mb-6"
-      />
-
       <View className="mb-6">
-        <Text className="text-lg font-bold mb-4">Recommended Businesses</Text>
-        {recommendedBusinesses.slice(0, 2).map((business) => (
-          <BusinessItem key={business.id} item={business} />
-        ))}
-      </View>
-
-      {nextAppointment && (
-        <View className="mb-6">
-          <Text className="text-lg font-bold mb-4">Your Next Appointment</Text>
-          <View className="p-4 bg-white rounded-lg shadow-sm">
-            <Text className="font-semibold">
-              {nextAppointment.businessName}
-            </Text>
-            <Text className="text-gray-600">
-              {nextAppointment.date} at {nextAppointment.time}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      <View className="flex-1 justify-center">
-        <Text>LARGE LOGO OF SOME KIND</Text>
-      </View>
-
-      <View className="mb-6">
-        <Text className="text-2xl font-semibold">Business Search</Text>
+        <Text className="text-lg font-bold mb-4">Business Search</Text>
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       </View>
 
@@ -156,14 +104,11 @@ function Home() {
               <View className="p-4 border rounded-md bg-gray-200 mb-2 flex-row justify-between items-center">
                 <View>
                   <Text className="font-bold">{item.name}</Text>
-                  <Text>{item.description}</Text>
                   <Text>{item.phone_number}</Text>
                 </View>
                 <Button
                   title="Make an Appointment"
-                  onPress={() => {
-                    console.log('Button Pressed for:', item.name);
-                  }}
+                  onPress={() => handleMakeAppointment(item)}
                 />
               </View>
             )}
@@ -173,19 +118,15 @@ function Home() {
       )}
 
       <View className="mb-6">
-        <Text className="text-lg font-bold mb-4">
-          Recommended (maybe grabs random businesses)
-        </Text>
-        <View className="h-32 rounded-md bg-gray-200 mb-4" />
-        <View className="h-32 rounded-md bg-gray-200" />
+        <Text className="text-lg font-bold mb-4">Recommended Businesses</Text>
+        <FlatList
+          data={businesses.slice(0, 2)} //want to randomise the businesses next instead of showing first 2
+          renderItem={({item}) => <BusinessItem item={item} />}
+          keyExtractor={(item) => item.id.toString()}
+          ListEmptyComponent={<Text className="text-center text-gray-500">No recommended businesses</Text>}
+        />
       </View>
 
-      <View className="mb-6">
-        <Text className="text-lg font-bold mb-4">
-          Upcoming Booking (probably the first booking)
-        </Text>
-        <View className="h-24 rounded-md bg-gray-200" />
-      </View>
     </ScrollView>
   );
 }
