@@ -131,6 +131,9 @@ const SettingsPage: React.FC = () => {
         >
           <Text style={{color: 'white'}}>Edit Profile</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={signOut}>
+          <Text>Logout</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
