@@ -1,9 +1,16 @@
 import React, {useEffect, useState} from 'react';
-import {View, Alert, ScrollView, ActivityIndicator} from 'react-native';
-import {Text} from '@/components/ui/text';
-import {Button} from '@/components/ui/button';
+import {
+  View,
+  Alert,
+  ScrollView,
+  ActivityIndicator,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import {useRouter, useLocalSearchParams} from 'expo-router';
-import {Input} from '@/components/ui/input';
+import {ArrowLeft, Save} from 'lucide-react-native';
 import {useEditBusiness} from '@/hooks/useEditBusiness';
 import {supabase} from '@/utils/supabase';
 
@@ -83,29 +90,31 @@ export default function EditBusinessPage() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View style={styles.container}>
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 p-4">
-      <View className="space-y-4">
-        <Text className="text-xl font-bold mb-4">Edit Business</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Edit Business</Text>
 
-        <View>
-          <Text className="mb-2">Business Name</Text>
-          <Input
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Business Name</Text>
+          <TextInput
+            style={styles.input}
             value={business.name}
             onChangeText={(text) => setBusiness({...business, name: text})}
             placeholder="Enter business name"
           />
         </View>
 
-        <View>
-          <Text className="mb-2">Description</Text>
-          <Input
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, styles.multilineInput]}
             value={business.description}
             onChangeText={(text) =>
               setBusiness({...business, description: text})
@@ -115,9 +124,10 @@ export default function EditBusinessPage() {
           />
         </View>
 
-        <View>
-          <Text className="mb-2">Phone Number</Text>
-          <Input
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Phone Number</Text>
+          <TextInput
+            style={styles.input}
             value={business.phone_number}
             onChangeText={(text) =>
               setBusiness({...business, phone_number: text})
@@ -127,18 +137,20 @@ export default function EditBusinessPage() {
           />
         </View>
 
-        <View>
-          <Text className="mb-2">Address</Text>
-          <Input
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Address</Text>
+          <TextInput
+            style={styles.input}
             value={business.address}
             onChangeText={(text) => setBusiness({...business, address: text})}
             placeholder="Enter address"
           />
         </View>
 
-        <View>
-          <Text className="mb-2">Email</Text>
-          <Input
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
             value={business.email}
             onChangeText={(text) => setBusiness({...business, email: text})}
             placeholder="Enter email"
@@ -146,23 +158,84 @@ export default function EditBusinessPage() {
           />
         </View>
 
-        <View className="flex-row space-x-4">
-          <Button
-            className="flex-1"
-            variant="destructive"
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
             onPress={() => router.back()}
           >
-            Cancel
-          </Button>
-          <Button
-            className="flex-1"
+            <ArrowLeft size={20} color="white" />
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.saveButton]}
             onPress={handleSave}
             disabled={saveLoading}
           >
-            {saveLoading ? 'Saving...' : 'Save Changes'}
-          </Button>
+            <Save size={20} color="white" />
+            <Text style={styles.buttonText}>
+              {saveLoading ? 'Saving...' : 'Save Changes'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+    gap: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    marginBottom: 8,
+    fontSize: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  multilineInput: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  button: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 14,
+    borderRadius: 8,
+    gap: 8,
+  },
+  cancelButton: {
+    backgroundColor: '#ef4444',
+  },
+  saveButton: {
+    backgroundColor: '#3b82f6',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

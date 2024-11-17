@@ -1,11 +1,13 @@
-// app/(tabs)/(settings)/editProfile.tsx
 import React, {useState, useEffect} from 'react';
-import {View, ActivityIndicator} from 'react-native';
-import {Text} from '@/components/ui/text';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Label} from '@/components/ui/label';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
+import {User, Save} from 'lucide-react-native';
 import {supabase} from '@/utils/supabase';
 import {useRouter} from 'expo-router';
 
@@ -75,35 +77,111 @@ const EditProfile = () => {
   }
 
   return (
-    <View className="flex-1 p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Profile</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <View>
-            <Label>First Name</Label>
-            <Input value={firstName} onChangeText={setFirstName} />
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <View style={styles.header}>
+          <User size={24} color="#000" />
+          <Text style={styles.title}>Edit Profile</Text>
+        </View>
+        <View style={styles.content}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>First Name</Text>
+            <TextInput
+              style={styles.input}
+              value={firstName}
+              onChangeText={setFirstName}
+            />
           </View>
-          <View>
-            <Label>Last Name</Label>
-            <Input value={lastName} onChangeText={setLastName} />
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Last Name</Text>
+            <TextInput
+              style={styles.input}
+              value={lastName}
+              onChangeText={setLastName}
+            />
           </View>
-          <View>
-            <Label>Email</Label>
-            <Input value={email} onChangeText={setEmail} />
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+            />
           </View>
-          <View>
-            <Label>Phone</Label>
-            <Input value={phone} onChangeText={setPhone} />
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Phone</Text>
+            <TextInput
+              style={styles.input}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+            />
           </View>
-          <Button onPress={handleSave}>
-            <Text>Save Changes</Text>
-          </Button>
-        </CardContent>
-      </Card>
+          <TouchableOpacity style={styles.button} onPress={handleSave}>
+            <Save size={20} color="#fff" />
+            <Text style={styles.buttonText}>Save Changes</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    elevation: 3,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 8,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  content: {
+    gap: 16,
+  },
+  inputContainer: {
+    gap: 4,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    padding: 8,
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 6,
+    gap: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
 export default EditProfile;

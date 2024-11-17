@@ -12,9 +12,7 @@ export const supabase: SupabaseClient = createClient(
   supabaseAnonKey,
   {
     auth: {
-      // https://github.com/supabase/supabase-js/issues/870
-      // shout out this guy holy fu
-      ...(Platform.OS !== 'web' ? {storage: AsyncStorage} : {}),
+      storage: AsyncStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,

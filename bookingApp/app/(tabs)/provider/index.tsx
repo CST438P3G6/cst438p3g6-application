@@ -4,11 +4,9 @@ import {
   TouchableOpacity,
   Alert,
   FlatList,
-  Image,
+  Text,
   RefreshControl,
 } from 'react-native';
-import {Text} from '@/components/ui/text';
-import {Button} from '@/components/ui/button';
 import {useRouter} from 'expo-router';
 import {Plus, Eye, Trash2, Settings} from 'lucide-react-native';
 import {useUserBusinesses} from '@/hooks/useUserBusiness';
@@ -80,7 +78,7 @@ export default function ProviderDashboard() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
         <Text>Loading...</Text>
       </View>
     );
@@ -88,34 +86,39 @@ export default function ProviderDashboard() {
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
         <Text>Error: {error}</Text>
       </View>
     );
   }
 
   const renderBusinessItem = ({item}: {item: Business}) => (
-    // This is basically a component
-    <View className="border-b border-gray-200 py-4">
-      <Text className="text-lg font-semibold">{item.name}</Text>
-      <View className="flex-row space-x-4 mt-4">
+    <View
+      style={{
+        borderBottomWidth: 1,
+        borderColor: '#e5e7eb',
+        paddingVertical: 16,
+      }}
+    >
+      <Text style={{fontSize: 18, fontWeight: '600'}}>{item.name}</Text>
+      <View style={{flexDirection: 'row', gap: 16, marginTop: 16}}>
         <TouchableOpacity
           onPress={() => router.push(`/business/${item.id}`)}
-          className="p-2 bg-gray-200 rounded-full"
+          style={{padding: 8, backgroundColor: '#e5e7eb', borderRadius: 20}}
         >
           <Eye size={20} />
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push(`/provider/editBusiness/${item.id}`)}
-          className="p-2 bg-blue-200 rounded-full"
+          style={{padding: 8, backgroundColor: '#bae6fd', borderRadius: 20}}
         >
           <Settings size={20} color="#2196F3" />
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => handleDeleteBusiness(item.id)}
-          className="p-2 bg-red-200 rounded-full"
+          style={{padding: 8, backgroundColor: '#fecaca', borderRadius: 20}}
         >
           <Trash2 size={20} color="#F44336" />
         </TouchableOpacity>
@@ -124,17 +127,25 @@ export default function ProviderDashboard() {
   );
 
   return (
-    <View className="flex-1 p-4">
-      <View className="mb-4">
-        <Button
+    <View style={{flex: 1, padding: 16}}>
+      <View style={{marginBottom: 16}}>
+        <TouchableOpacity
           onPress={() => router.push('/provider/createBusiness')}
-          variant="default"
-          className="flex-row justify-center items-center p-2 w-full"
+          style={{
+            backgroundColor: '#2196F3',
+            padding: 8,
+            borderRadius: 8,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
         >
           <Plus size={16} color="white" />
-          <Text className="ml-2">Create Business</Text>
-        </Button>
-        <Text className="text-xl font-bold">My Businesses</Text>
+          <Text style={{marginLeft: 8, color: 'white'}}>Create Business</Text>
+        </TouchableOpacity>
+        <Text style={{fontSize: 24, fontWeight: 'bold', marginTop: 8}}>
+          My Businesses
+        </Text>
       </View>
 
       <FlatList
@@ -146,7 +157,9 @@ export default function ProviderDashboard() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{flexGrow: 1}}
         ListEmptyComponent={
-          <View className="flex-1 justify-center items-center">
+          <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}
+          >
             <Text>No businesses found</Text>
           </View>
         }
