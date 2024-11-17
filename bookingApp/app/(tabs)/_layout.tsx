@@ -1,55 +1,121 @@
-import '~/global.css';
+import {Tabs} from 'expo-router';
+import {useEffect, useState} from 'react';
+import {supabase} from '@/utils/supabase';
+import {Home, Calendar, Settings, Users} from 'lucide-react-native';
+//TODO import theme from the theme thing
 
-import { StatusBar } from 'expo-status-bar';
-import * as React from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home as HomeIcon, Settings as SettingsIcon, Briefcase as BusinessIcon, Calendar as AppointmentsIcon, User as AccountIcon, FileSliders as ConfigureBusinessIcon } from 'lucide-react-native';
-import HomePage from './homePage';
-import SettingsPage from './settingsPage';
-import BusinessPage from './businessPage';
-import AppointmentsPage from './appointmentsPage';
-import AccountPage from './accountPage';
-import ConfigureBusinessPage from './configureBusinessPage';
+export default function TabLayout() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isProvider, setIsProvider] = useState(false);
 
-const Tabs = createBottomTabNavigator();
+  useEffect(() => {
+    checkUserRole();
 
-export default function RootLayout() {
-  return (
-    <>
-      <StatusBar style="auto" />
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Tabs.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ color, size }) => {
-              switch (route.name) {
-                case 'Home':
-                  return <HomeIcon color={color} size={size} />;
-                case 'Settings':
-                  return <SettingsIcon color={color} size={size} />;
-                case 'Business':
-                  return <BusinessIcon color={color} size={size} />;
-                case 'Appointments':
-                  return <AppointmentsIcon color={color} size={size} />;
-                case 'Account':
-                  return <AccountIcon color={color} size={size} />;
-                case 'ConfigureBusiness':
-                  return <ConfigureBusinessIcon color={color} size={size} />;
-                default:
-                  return null;
+    const subscription = supabase
+      .channel('public:profiles')
+      .on(
+        'postgres_changes',
+        {event: 'UPDATE', schema: 'public', table: 'profiles'},
+        (payload) => {
+          console.log('Realtime update received:', payload);
+          if (payload.new) {
+            const {id, isadmin, isprovider} = payload.new;
+            supabase.auth.getUser().then(({data: {user}}) => {
+              if (user && user.id === id) {
+                setIsAdmin(isadmin || false);
+                setIsProvider(isprovider || false);
               }
-            },
-            headerShown: false, 
-          })}
-        >
-          <Tabs.Screen name="Home" component={HomePage} options={{ title: 'Home' }} />
-          <Tabs.Screen name="Settings" component={SettingsPage} options={{ title: 'Settings' }} />
-          <Tabs.Screen name="Business" component={BusinessPage} options={{ title: 'Business' }} />
-          <Tabs.Screen name="Appointments" component={AppointmentsPage} options={{ title: 'Appointments' }} />
-          <Tabs.Screen name="Account" component={AccountPage} options={{ title: 'Account' }} />
-          <Tabs.Screen name="ConfigureBusiness" component={ConfigureBusinessPage} options={{ title: 'Configure Business' }} />
-        </Tabs.Navigator>
-      </GestureHandlerRootView>
-    </>
+            });
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+
+  const checkUserRole = async () => {
+    try {
+      const {
+        data: {user},
+      } = await supabase.auth.getUser();
+      if (user) {
+        const {data: profile} = await supabase
+          .from('profiles')
+          .select('isadmin, isprovider')
+          .eq('id', user.id)
+          .single();
+
+        setIsAdmin(profile?.isadmin || false);
+        setIsProvider(profile?.isprovider || false);
+      }
+    } catch (error) {
+      console.error('Error checking user role:', error);
+    }
+  };
+
+  const tabScreens = [
+    <Tabs.Screen
+      key="home"
+      name="home"
+      options={{
+        title: 'Home',
+        tabBarIcon: ({color}) => <Home size={24} color={color} />,
+      }}
+    />,
+    <Tabs.Screen
+      key="appointments"
+      name="appointments"
+      options={{
+        title: 'Appointments',
+        tabBarIcon: ({color}) => <Calendar size={24} color={color} />,
+      }}
+    />,
+    <Tabs.Screen
+      key="Admin"
+      name="admin"
+      options={{
+        title: 'Admin',
+      }}
+      redirect={!isAdmin}
+    />,
+    <Tabs.Screen
+      key="business/[id]"
+      name="business/[id]"
+      options={{
+        href: null,
+        title: 'Business Details',
+      }}
+    />,
+    <Tabs.Screen
+      key="Provider"
+      name="provider"
+      options={{
+        title: 'Provider',
+        tabBarIcon: ({color}) => <Users size={24} color={color} />,
+      }}
+      redirect={!isProvider}
+    />,
+    <Tabs.Screen
+      key="settings"
+      name="settings"
+      options={{
+        title: 'Settings',
+        tabBarIcon: ({color}) => <Settings size={24} color={color} />,
+      }}
+    />,
+  ].filter(Boolean);
+
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: '#007AFF',
+        headerShown: false,
+      }}
+    >
+      {tabScreens}
+    </Tabs>
   );
 }
