@@ -1,15 +1,14 @@
 import React, {useState, useEffect} from 'react';
 import {
   View,
-  ScrollView,
+  FlatList,
   Alert,
   ActivityIndicator,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  Button,
+  SafeAreaView,
 } from 'react-native';
-import {useLocalSearchParams, router} from 'expo-router';
+import {useLocalSearchParams} from 'expo-router';
 import {supabase} from '@/utils/supabase';
 import {
   Star,
@@ -20,259 +19,180 @@ import {
   MapPin,
 } from 'lucide-react-native';
 
-interface Business {
+type Business = {
   id: number;
   name: string;
   description: string;
   phone_number: string;
   address: string;
   email: string;
-}
+};
 
-interface Service {
+type Service = {
   id: number;
   name: string;
   description: string;
   cost: number;
   time_needed: string;
-  is_active: boolean;
-}
+};
 
-interface Review {
-  id: number;
-  body: string;
-  rating: number;
-  user_id: string;
-}
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: '#3b82f6',
-    padding: 12,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-});
-
-export default function BusinessDetails() {
-  const {id} = useLocalSearchParams<{id: string}>();
+export default function BusinessScreen() {
+  const {id} = useLocalSearchParams();
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function fetchData() {
+      try {
+        const [businessResponse, servicesResponse] = await Promise.all([
+          supabase.from('business').select('*').eq('id', id).single(),
+          supabase
+            .from('service')
+            .select('*')
+            .eq('business_id', id)
+            .eq('is_active', true),
+        ]);
+
+        if (businessResponse.error) throw businessResponse.error;
+        if (servicesResponse.error) throw servicesResponse.error;
+
+        setBusiness(businessResponse.data);
+        setServices(servicesResponse.data || []);
+      } catch (error) {
+        Alert.alert('Error', 'Failed to fetch data');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchData();
-    setupRealtime();
   }, [id]);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-
-      const [businessData, servicesData, reviewsData] = await Promise.all([
-        supabase
-          .from('business')
-          .select<'business', Business>('*')
-          .eq('id', id)
-          .single(),
-        supabase
-          .from('service')
-          .select<'service', Service>('*')
-          .eq('business_id', id),
-        supabase
-          .from('reviews')
-          .select<'reviews', Review>('*')
-          .eq('business_id', id),
-      ]);
-
-      if (businessData.error) throw businessData.error;
-      if (servicesData.error) throw servicesData.error;
-      if (reviewsData.error) throw reviewsData.error;
-
-      setBusiness(businessData.data);
-      setServices(servicesData.data || []);
-      setReviews(reviewsData.data || []);
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Failed to load business details');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const setupRealtime = () => {
-    const channel = supabase
-      .channel('business_details')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'business',
-          filter: `id=eq.${id}`,
-        },
-        fetchData,
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'service',
-          filter: `business_id=eq.${id}`,
-        },
-        fetchData,
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'reviews',
-          filter: `business_id=eq.${id}`,
-        },
-        fetchData,
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
+  const renderServiceItem = ({item}: {item: Service}) => (
+    <View style={styles.serviceCard}>
+      <Text style={styles.serviceName}>{item.name}</Text>
+      {item.description && (
+        <Text style={styles.description}>{item.description}</Text>
+      )}
+      <View style={styles.detailsRow}>
+        <View style={styles.detail}>
+          <DollarSign size={16} />
+          <Text>${item.cost}</Text>
+        </View>
+        <View style={styles.detail}>
+          <Clock size={16} />
+          <Text>{item.time_needed}</Text>
+        </View>
+      </View>
+    </View>
+  );
 
   if (loading) {
     return (
-      <View>
+      <View style={styles.centered}>
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
-  if (!business) {
-    return (
-      <View>
-        <Text>Business not found</Text>
-      </View>
-    );
-  }
-
-  const averageRating = reviews.length
-    ? reviews.reduce((acc, rev) => acc + rev.rating, 0) / reviews.length
-    : 0;
-
   return (
-    <ScrollView>
-      <View>
-        <View>
-          <Text>{business.name}</Text>
-          <Text>{business.description}</Text>
-
-          <View>
-            <View>
-              <Phone size={20} />
+    <SafeAreaView style={styles.container}>
+      {business && (
+        <View style={styles.businessInfo}>
+          <Text style={styles.businessName}>{business.name}</Text>
+          <Text style={styles.businessDescription}>{business.description}</Text>
+          <View style={styles.contactInfo}>
+            <View style={styles.contactRow}>
+              <Phone size={16} />
               <Text>{business.phone_number}</Text>
             </View>
-            <View>
-              <Mail size={20} />
+            <View style={styles.contactRow}>
+              <Mail size={16} />
               <Text>{business.email}</Text>
             </View>
-            <View>
-              <MapPin size={20} />
+            <View style={styles.contactRow}>
+              <MapPin size={16} />
               <Text>{business.address}</Text>
             </View>
           </View>
         </View>
-
-        {/* Services */}
-        <View>
-          <Text>Services</Text>
-          {services.map((service) => (
-            <View key={service.id}>
-              <Text>{service.name}</Text>
-              <Text className="text-gray-600">{service.description}</Text>
-              <View className="flex-row mt-2 space-x-4">
-                <View className="flex-row items-center">
-                  <DollarSign size={16} className="text-gray-500 mr-1" />
-                  <Text>${service.cost}</Text>
-                </View>
-                <View className="flex-row items-center">
-                  <Clock size={16} className="text-gray-500 mr-1" />
-                  <Text>{service.time_needed}</Text>
-                </View>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Reviews */}
-        <View className="mb-4">
-          <View className="flex-row items-center mb-2">
-            <Text className="text-xl font-bold">Reviews</Text>
-            <View className="flex-row items-center ml-2">
-              <Star size={16} color="#FFD700" />
-              <Text className="ml-1">{averageRating.toFixed(1)}</Text>
-            </View>
-          </View>
-
-          {reviews.map((review) => (
-            <View
-              key={review.id}
-              className="bg-white p-4 rounded-lg mb-2 shadow-sm"
-            >
-              <View className="flex-row mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={16}
-                    color={i < review.rating ? '#FFD700' : '#E5E7EB'}
-                  />
-                ))}
-              </View>
-              <Text>{review.body}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={{marginBottom: 16}}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() =>
-              router.push({
-                pathname: '/booking/[id]',
-                params: {id},
-              })
-            }
-          >
-            <Text style={{color: 'white', fontWeight: '600'}}>
-              Book Appointment
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              {
-                backgroundColor: 'transparent',
-                borderWidth: 1,
-                borderColor: '#3b82f6',
-              },
-            ]}
-            onPress={() =>
-              router.push({
-                pathname: '/contact/[id]',
-                params: {id},
-              })
-            }
-          >
-            <Text style={{color: '#3b82f6', fontWeight: '600'}}>
-              Contact Business
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ScrollView>
+      )}
+      <FlatList
+        data={services}
+        renderItem={renderServiceItem}
+        keyExtractor={(item) => item.id.toString()}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.servicesList}
+      />
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  businessInfo: {
+    padding: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  businessName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  businessDescription: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 16,
+  },
+  contactInfo: {
+    gap: 8,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  servicesList: {
+    padding: 16,
+  },
+  serviceCard: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  serviceName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  description: {
+    color: '#666',
+    marginBottom: 12,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  detail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+});
