@@ -14,7 +14,7 @@ try {
 }
 
 export default function RootLayout() {
-  const [initialized, setInitialized] = React.useState(false);
+  const [isReady, setIsReady] = React.useState(false);
   const appState = React.useRef(AppState.currentState);
 
   React.useEffect(() => {
@@ -22,14 +22,18 @@ export default function RootLayout() {
       appState.current = nextAppState;
     });
 
-    const init = async () => {
+    const prepareApp = async () => {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        await AsyncStorage.getItem('firstLaunch');
+        await Promise.all([
+          AsyncStorage.getItem('firstLaunch'),
+          new Promise((resolve) => {
+            requestAnimationFrame(resolve);
+          }),
+        ]);
       } catch (e) {
         console.warn('Initialization error:', e);
       } finally {
-        setInitialized(true);
+        setIsReady(true);
         try {
           await SplashScreen.hideAsync();
         } catch (e) {
@@ -38,14 +42,14 @@ export default function RootLayout() {
       }
     };
 
-    init();
+    prepareApp();
 
     return () => {
       subscription.remove();
     };
   }, []);
 
-  if (!initialized) {
+  if (!isReady) {
     return (
       <View
         style={{
