@@ -4,8 +4,9 @@ import * as React from 'react';
 import {Platform, View, Text, AppState, ActivityIndicator} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {UserContextProvider} from '@/context/UserContext';
+import Toast from 'react-native-toast-message';
 
-export {ErrorBoundary} from 'expo-router';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 
 try {
   SplashScreen.preventAutoHideAsync();
@@ -69,14 +70,7 @@ export default function RootLayout() {
       <UserContextProvider>
         <Slot />
       </UserContextProvider>
+      <Toast />
     </GestureHandlerRootView>
-  );
-}
-
-export function ErrorBoundary(props: {error: Error}) {
-  return (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-      <Text>An error occurred: {props.error.message}</Text>
-    </View>
   );
 }
