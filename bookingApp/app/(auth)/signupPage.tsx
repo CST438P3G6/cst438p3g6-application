@@ -24,49 +24,62 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const validateInputs = () => {
+    if (!email || !password || !firstName || !lastName || !phoneNumber) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return false;
+    }
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return false;
+    }
+    return true;
+  };
+
   const signUpWithEmail = async () => {
+    if (!validateInputs()) return;
+
     setLoading(true);
     try {
       const {
         data: {user},
-        error,
+        error: signUpError,
       } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          },
+        },
       });
 
-      if (error) {
-        Alert.alert('Error', error.message);
-        return;
-      }
+      if (signUpError) throw signUpError;
+      if (!user) throw new Error('User creation failed');
 
-      if (user) {
-        const {error: profileInsertError} = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: user.id,
-              first_name: firstName,
-              last_name: lastName,
-              email: email,
-              phone_number: phoneNumber,
-              isadmin: isAdmin,
-              isprovider: isProvider,
-              is_active: true,
-            },
-          ]);
+      const {error: profileError} = await supabase
+        .from('profiles')
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          phone_number: phoneNumber,
+          isadmin: isAdmin,
+          isprovider: isProvider,
+          is_active: true,
+        })
+        .eq('id', user.id);
 
-        if (profileInsertError) {
-          console.error('Profile creation error:', profileInsertError);
-          Alert.alert('Error', profileInsertError.message);
-        } else {
-          console.log('User signed up and profile created');
-          router.replace('/(tabs)/home');
-        }
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      Alert.alert('Signup failed', (err as Error).message);
+      if (profileError) throw profileError;
+
+      Alert.alert(
+        'Success',
+        'Account created successfully! Please check your email to verify your account.',
+        [{text: 'OK', onPress: () => router.push('/(auth)/loginPage')}],
+      );
+    } catch (error) {
+      console.error('SignUp error:', error);
+      Alert.alert('Error', (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -83,24 +96,12 @@ export default function SignUpPage() {
 
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
-            <User size={20} color="#666" />
-            <TextInput
-              placeholder="First Name"
-              value={firstName}
-              style={styles.input}
-              onChangeText={setFirstName}
-              placeholder="Enter your first name"
-            />
-          </View>
-
-          <View style={styles.inputWrapper}>
             <Mail size={20} color="#666" />
             <TextInput
               placeholder="Email"
               value={email}
-              style={styles.input}
               onChangeText={setEmail}
-              placeholder="Enter your email"
+              style={styles.input}
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -111,10 +112,29 @@ export default function SignUpPage() {
             <TextInput
               placeholder="Password"
               value={password}
-              style={styles.input}
               onChangeText={setPassword}
-              placeholder="Enter your password"
+              style={styles.input}
               secureTextEntry
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <User size={20} color="#666" />
+            <TextInput
+              placeholder="First Name"
+              value={firstName}
+              onChangeText={setFirstName}
+              style={styles.input}
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <User size={20} color="#666" />
+            <TextInput
+              placeholder="Last Name"
+              value={lastName}
+              onChangeText={setLastName}
+              style={styles.input}
             />
           </View>
 
@@ -123,9 +143,8 @@ export default function SignUpPage() {
             <TextInput
               placeholder="Phone Number"
               value={phoneNumber}
-              style={styles.input}
               onChangeText={setPhoneNumber}
-              placeholder="Enter your phone number"
+              style={styles.input}
               keyboardType="phone-pad"
             />
           </View>
@@ -151,7 +170,7 @@ export default function SignUpPage() {
 
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={signUpWithEmail}
             disabled={loading}
           >
@@ -165,6 +184,7 @@ export default function SignUpPage() {
           <TouchableOpacity
             style={styles.linkButton}
             onPress={() => router.push('/(auth)/loginPage')}
+            disabled={loading}
           >
             <Text style={styles.linkText}>
               Already have an account? Sign In
@@ -191,6 +211,10 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
+    alignItems: 'center',
+  },
+  headerIcon: {
+    marginBottom: 16,
   },
   title: {
     fontSize: 24,
@@ -203,7 +227,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: '100%',
-    paddingHorizontal: 16,
+    gap: 16,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -212,33 +236,34 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 8,
     paddingHorizontal: 12,
-    marginBottom: 16,
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
   },
   input: {
     flex: 1,
     padding: 12,
     fontSize: 16,
   },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  label: {
+    fontSize: 16,
+    color: '#333',
+  },
   footer: {
     marginTop: 24,
-    gap: 12,
+    gap: 16,
   },
   button: {
     backgroundColor: '#007AFF',
-    padding: 16,
     borderRadius: 8,
+    padding: 16,
     alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#ccc',
   },
   buttonText: {
     color: '#fff',
@@ -247,14 +272,9 @@ const styles = StyleSheet.create({
   },
   linkButton: {
     alignItems: 'center',
-    padding: 8,
   },
   linkText: {
     color: '#007AFF',
     fontSize: 14,
-  },
-  headerIcon: {
-    marginBottom: 16,
-    alignSelf: 'center',
   },
 });
