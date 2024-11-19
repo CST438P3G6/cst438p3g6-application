@@ -5,12 +5,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ScrollView,
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import {useCreateService} from '@/hooks/useCreateService';
 import {useLocalSearchParams} from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 export default function CreateServicePage() {
   const {businessId} = useLocalSearchParams();
@@ -24,9 +24,23 @@ export default function CreateServicePage() {
     business_id: Number(businessId), // Get from route params
   });
 
+  const showToast = (
+    type: 'success' | 'error',
+    text1: string,
+    text2: string,
+  ) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+      position: 'bottom',
+      visibilityTime: 4000,
+    });
+  };
+
   const handleSubmit = async () => {
     if (!formData.name || !formData.cost || !formData.time_needed) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      showToast('error', 'Error', 'Please fill in all required fields');
       return;
     }
 
@@ -39,11 +53,10 @@ export default function CreateServicePage() {
     const {error} = await createService(serviceData);
 
     if (error) {
-      Alert.alert('Error', error);
+      showToast('error', 'Error', error.message || 'Failed to create service');
     } else {
-      Alert.alert('Success', 'Service created successfully', [
-        {text: 'OK', onPress: () => router.back()},
-      ]);
+      showToast('success', 'Success', 'Service created successfully');
+      router.back();
     }
   };
 

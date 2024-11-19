@@ -10,6 +10,7 @@ import {
 import {useRouter, useLocalSearchParams} from 'expo-router';
 import {ArrowLeft, Clock, DollarSign} from 'lucide-react-native';
 import {supabase} from '@/utils/supabase';
+import Toast from 'react-native-toast-message';
 
 interface Service {
   id: number;
@@ -31,6 +32,20 @@ export default function ServiceDetailsPage() {
     fetchService();
   }, [id]);
 
+  const showToast = (
+    type: 'success' | 'error',
+    text1: string,
+    text2: string,
+  ) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+      position: 'bottom',
+      visibilityTime: 4000,
+    });
+  };
+
   const fetchService = async () => {
     try {
       setLoading(true);
@@ -42,8 +57,12 @@ export default function ServiceDetailsPage() {
 
       if (error) throw error;
       setService(data);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to load service details');
+    } catch (error: any) {
+      showToast(
+        'error',
+        'Error',
+        error.message || 'Failed to load service details',
+      );
       console.error(error);
     } finally {
       setLoading(false);
@@ -52,7 +71,7 @@ export default function ServiceDetailsPage() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
       </View>
     );
@@ -68,14 +87,8 @@ export default function ServiceDetailsPage() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <ArrowLeft size={24} color="#007AFF" />
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
-
       <View style={styles.card}>
         <Text style={styles.serviceName}>{service.name}</Text>
-
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
             <DollarSign size={20} color="#666" />
@@ -148,5 +161,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     lineHeight: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

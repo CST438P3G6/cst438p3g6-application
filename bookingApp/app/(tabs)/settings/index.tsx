@@ -33,7 +33,7 @@ const SettingsPage: React.FC = () => {
         text1: 'Success',
         text2: 'Logged out successfully',
         position: 'bottom',
-        visibilityTime: 4000,
+        visibilityTime: 1000,
       });
       navigation.dispatch(
         CommonActions.reset({
@@ -47,7 +47,7 @@ const SettingsPage: React.FC = () => {
         text1: 'Error',
         text2: error.message || 'Failed to log out',
         position: 'bottom',
-        visibilityTime: 4000,
+        visibilityTime: 1000,
       });
     }
   };
@@ -59,7 +59,7 @@ const SettingsPage: React.FC = () => {
         text1: 'Error',
         text2: 'User not found',
         position: 'bottom',
-        visibilityTime: 4000,
+        visibilityTime: 1000,
       });
       return;
     }
@@ -70,9 +70,21 @@ const SettingsPage: React.FC = () => {
         .eq('id', user.id);
 
       if (error) throw error;
-      toast.success('Profile updated to admin successfully');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Admin status updated successfully',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     } catch (error: any) {
-      toast.error(error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Failed to update admin status',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     }
   };
 
@@ -125,7 +137,6 @@ const SettingsPage: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* User Info Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <User size={24} color={colors.text} />
@@ -163,7 +174,6 @@ const SettingsPage: React.FC = () => {
           )}
         </View>
 
-        {/* Actions */}
         <TouchableOpacity
           style={[styles.button, {backgroundColor: colors.primary}]}
           onPress={() => router.push('/settings/editProfile')}
@@ -178,9 +188,6 @@ const SettingsPage: React.FC = () => {
         >
           <LogOut size={20} color="white" />
           <Text style={styles.buttonText}>Logout</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={signOut}>
-          <Text>Logout</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

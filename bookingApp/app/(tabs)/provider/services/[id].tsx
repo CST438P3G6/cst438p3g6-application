@@ -6,10 +6,21 @@ import {
   FlatList,
   Text,
   RefreshControl,
+  StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import {useRouter, useLocalSearchParams} from 'expo-router';
-import {Plus, Eye, Trash2, Settings} from 'lucide-react-native';
+import {
+  Plus,
+  Eye,
+  Trash2,
+  Settings,
+  ArrowLeft,
+  Clock,
+  DollarSign,
+} from 'lucide-react-native';
 import {supabase} from '@/utils/supabase';
+import Toast from 'react-native-toast-message';
 
 interface Service {
   id: number;
@@ -78,6 +89,20 @@ export default function BusinessServices() {
     };
   }, []);
 
+  const showToast = (
+    type: 'success' | 'error',
+    text1: string,
+    text2: string,
+  ) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+      position: 'bottom',
+      visibilityTime: 1000,
+    });
+  };
+
   const handleDeleteService = async (serviceId: number) => {
     try {
       const {error} = await supabase
@@ -86,10 +111,10 @@ export default function BusinessServices() {
         .eq('id', serviceId);
 
       if (error) throw error;
-      Alert.alert('Success', 'Service deleted successfully');
+      showToast('success', 'Success', 'Service deleted successfully');
       await fetchServices();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to delete service');
+    } catch (error: any) {
+      showToast('error', 'Error', error.message || 'Failed to delete service');
       console.error(error);
     }
   };
@@ -130,8 +155,8 @@ export default function BusinessServices() {
 
   if (loading) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text>Loading...</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
   }
@@ -145,7 +170,7 @@ export default function BusinessServices() {
   }
 
   return (
-    <View style={{flex: 1, padding: 16}}>
+    <View style={styles.container}>
       <View style={{marginBottom: 16}}>
         <TouchableOpacity
           onPress={() => router.push(`/provider/services/createService/${id}`)}
@@ -185,3 +210,15 @@ export default function BusinessServices() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

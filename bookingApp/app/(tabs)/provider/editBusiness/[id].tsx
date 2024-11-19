@@ -13,6 +13,7 @@ import {useRouter, useLocalSearchParams} from 'expo-router';
 import {ArrowLeft, Save} from 'lucide-react-native';
 import {useEditBusiness} from '@/hooks/useEditBusiness';
 import {supabase} from '@/utils/supabase';
+import Toast from 'react-native-toast-message';
 
 interface Business {
   id: string;
@@ -56,7 +57,13 @@ export default function EditBusinessPage() {
         .single();
 
       if (error) {
-        Alert.alert('Error', 'Failed to fetch business');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to fetch business',
+          position: 'bottom',
+          visibilityTime: 4000,
+        });
         router.back();
         return;
       }
@@ -70,21 +77,35 @@ export default function EditBusinessPage() {
 
   const handleSave = async () => {
     if (!business.name || !business.email) {
-      Alert.alert('Error', 'Name and email are required');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Name and email are required',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
       return;
     }
 
     const result = await editBusiness(business);
 
     if (result.error) {
-      Alert.alert('Error', result.error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: result.error,
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
     } else {
-      Alert.alert('Success', 'Business updated successfully', [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]);
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Business updated successfully',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
+      router.back();
     }
   };
 
@@ -159,14 +180,6 @@ export default function EditBusinessPage() {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={20} color="white" />
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.button, styles.saveButton]}
             onPress={handleSave}
