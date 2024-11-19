@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -7,9 +7,14 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
+  Button,
+  Modal,
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
-import {useLocalSearchParams} from 'expo-router';
-import {supabase} from '@/utils/supabase';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useLocalSearchParams } from 'expo-router';
+import { supabase } from '@/utils/supabase';
 import {
   Star,
   Clock,
@@ -37,21 +42,23 @@ type Service = {
 };
 
 export default function BusinessScreen() {
-  const {id} = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedStartTime, setSelectedStartTime] = useState<Date | null>(null);
+  const [selectedEndTime, setSelectedEndTime] = useState<Date | null>(null);
+  const [showPicker, setShowPicker] = useState<{
+    type: 'start' | 'end' | null;
+  }>({ type: null });
 
   useEffect(() => {
     async function fetchData() {
       try {
         const [businessResponse, servicesResponse] = await Promise.all([
           supabase.from('business').select('*').eq('id', id).single(),
-          supabase
-            .from('service')
-            .select('*')
-            .eq('business_id', id)
-            .eq('is_active', true),
+          supabase.from('service').select('*').eq('business_id', id).eq('is_active', true),
         ]);
 
         if (businessResponse.error) throw businessResponse.error;
@@ -70,12 +77,26 @@ export default function BusinessScreen() {
     fetchData();
   }, [id]);
 
-  const renderServiceItem = ({item}: {item: Service}) => (
+  const openModal = () => setModalVisible(true);
+  const closeModal = () => setModalVisible(false);
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    if (showPicker.type === 'start' && selectedDate) {
+      setSelectedStartTime(selectedDate);
+    } else if (showPicker.type === 'end' && selectedDate) {
+      setSelectedEndTime(selectedDate);
+    }
+    setShowPicker({ type: null });
+  };
+
+  const showDateTimePicker = (type: 'start' | 'end') => {
+    setShowPicker({ type });
+  };
+
+  const renderServiceItem = ({ item }: { item: Service }) => (
     <View style={styles.serviceCard}>
       <Text style={styles.serviceName}>{item.name}</Text>
-      {item.description && (
-        <Text style={styles.description}>{item.description}</Text>
-      )}
+      {item.description && <Text style={styles.description}>{item.description}</Text>}
       <View style={styles.detailsRow}>
         <View style={styles.detail}>
           <DollarSign size={16} />
@@ -86,6 +107,7 @@ export default function BusinessScreen() {
           <Text>{item.time_needed}</Text>
         </View>
       </View>
+      <Button title="Book" onPress={openModal} />
     </View>
   );
 
@@ -126,6 +148,37 @@ export default function BusinessScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.servicesList}
       />
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Start and End Time</Text>
+            <TouchableOpacity onPress={() => showDateTimePicker('start')}>
+              <Text style={styles.timeSelector}>
+                {selectedStartTime ? selectedStartTime.toLocaleString() : 'Select Start Time'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => showDateTimePicker('end')}>
+              <Text style={styles.timeSelector}>
+                {selectedEndTime ? selectedEndTime.toLocaleString() : 'Select End Time'}
+              </Text>
+            </TouchableOpacity>
+            {showPicker.type && (
+              <DateTimePicker
+                value={new Date()}
+                mode="datetime"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+              />
+            )}
+            <Button title="Confirm" onPress={closeModal} />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -173,7 +226,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -194,5 +247,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  timeSelector: {
+    padding: 10,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });
