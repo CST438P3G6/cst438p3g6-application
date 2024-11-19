@@ -20,6 +20,7 @@ type UserContextType = {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  error: string | null;
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
@@ -34,6 +35,7 @@ export function UserContextProvider({children}: {children: React.ReactNode}) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const segments = useSegments();
 
@@ -99,9 +101,7 @@ export function UserContextProvider({children}: {children: React.ReactNode}) {
 
   useEffect(() => {
     if (loading) return;
-
     const inAuthGroup = segments[0] === '(auth)';
-
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/loginPage');
     } else if (user && inAuthGroup) {
@@ -147,43 +147,63 @@ export function UserContextProvider({children}: {children: React.ReactNode}) {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return;
+    if (!user) throw new Error('No authenticated user');
 
-    // Update the 'profiles' table in Supabase with the provided updates for the current user
-    const {data, error} = await supabase
-      .from('profiles') // Specify the 'profiles' table
-      .update(updates) // Apply the updates
-      .eq('id', user.id) // Filter by the current user's ID
-      .select() // Return the updated record
-      .single(); // Ensure a single object is returned
+    try {
+      const {data, error} = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id)
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error updating profile:', error);
-      throw error;
+      if (error) throw error;
+      if (!data) throw new Error('Failed to update profile');
+
+      setProfile(data as Profile);
+    } catch (err) {
+      console.error('Profile update failed:', err);
+      throw err;
     }
-
-    // Update the local profile state with the new data
-    setProfile(data as unknown as Profile);
-    // just having data causes errors so i had to cast it to Profile
-
-    // Supabase real-time: This update triggers real-time updates to subscribed clients
-    // so down the line all information that is in UserContext will be updated.
   };
+
+  useEffect(() => {
+    const refreshSession = async () => {
+      const {
+        data: {session},
+        error,
+      } = await supabase.auth.refreshSession();
+      if (error) {
+        await signOut();
+      }
+    };
+
+    // Refresh session every 30 minutes
+    const interval = setInterval(refreshSession, 1000 * 60 * 30);
+    return () => clearInterval(interval);
+  }, []);
 
   const value = {
     user,
     session,
     profile,
     loading,
+    error,
     signIn,
     signOut,
     updateProfile,
   };
 
-  // here we print all the stuff that is in the UserContext and basically I am wrapping the session in the context
-
-  // Provide the context value to all child components so the rest of the app
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
+}
+
+function isValidProfile(data: any): data is Profile {
+  return (
+    typeof data === 'object' &&
+    typeof data.id === 'string' &&
+    typeof data.email === 'string'
+    // Add other field validations
+  );
 }
 
 // Custom hook to access the UserContext

@@ -10,6 +10,7 @@ import {
 import {User, Save} from 'lucide-react-native';
 import {supabase} from '@/utils/supabase';
 import {useRouter} from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 const EditProfile = () => {
   const [loading, setLoading] = useState(true);
@@ -65,10 +66,24 @@ const EditProfile = () => {
           })
           .eq('id', user.id);
 
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Profile updated successfully',
+          position: 'bottom',
+          visibilityTime: 1000,
+        });
+
         router.back();
       }
-    } catch (error) {
-      console.error('Error updating profile:', error);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Failed to update profile',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     }
   };
 

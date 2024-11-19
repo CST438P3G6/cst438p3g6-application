@@ -1,15 +1,15 @@
 import React, {useState} from 'react';
 import {
   View,
-  Alert,
   TextInput,
   Button,
   Text,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import {useCreateBusiness} from '@/hooks/useCreateBusiness';
-import {CheckCircle, XCircle} from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
 
 export default function CreateBusiness() {
   const router = useRouter();
@@ -31,40 +31,83 @@ export default function CreateBusiness() {
     };
     const {data, error} = await createBusiness(business);
     if (error) {
-      Alert.alert('Error', error, [{text: 'OK'}]);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error,
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     } else {
-      Alert.alert('Success', 'Business created successfully', [{text: 'OK'}]);
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Business created successfully',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
       router.push('/provider');
     }
   };
 
   return (
-    <View>
-      <Text>Create Business</Text>
-      <TextInput placeholder="Name" value={name} onChangeText={setName} />
+    <View style={styles.container}>
+      <Text style={styles.title}>Create Business</Text>
       <TextInput
+        style={styles.input}
+        placeholder="Name"
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
         placeholder="Description"
         value={description}
         onChangeText={setDescription}
       />
       <TextInput
+        style={styles.input}
         placeholder="Phone Number"
         value={phoneNumber}
         onChangeText={setPhoneNumber}
       />
       <TextInput
+        style={styles.input}
         placeholder="Address"
         value={address}
         onChangeText={setAddress}
       />
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} />
-      <Button
-        onPress={handleCreateBusiness}
-        disabled={loading}
-        title={loading ? 'Creating...' : 'Create Business'}
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
       />
-      {loading && <ActivityIndicator />}
-      {error && <Text>{error}</Text>}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <Button title="Create Business" onPress={handleCreateBusiness} />
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 8,
+  },
+});

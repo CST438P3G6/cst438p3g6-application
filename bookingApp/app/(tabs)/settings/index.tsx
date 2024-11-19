@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import {useRouter} from 'expo-router';
 import {
   View,
@@ -8,13 +8,15 @@ import {
   TouchableOpacity,
   Switch,
   ScrollView,
+  StyleSheet,
 } from 'react-native';
 import {supabase} from '@/utils/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {CommonActions, useNavigation} from '@react-navigation/native';
 import {useTheme} from '@react-navigation/native';
 import {useUser} from '@/context/UserContext';
-import {LogOut, User, Trash2, Moon, Shield, UserCog} from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
+import {LogOut, User, UserCog} from 'lucide-react-native';
 
 const SettingsPage: React.FC = () => {
   const {user, profile, loading, signOut} = useUser();
@@ -26,7 +28,13 @@ const SettingsPage: React.FC = () => {
     try {
       await signOut();
       await AsyncStorage.removeItem('supabase.auth.token');
-      console.log('Logged out successfully');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Logged out successfully',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -34,18 +42,27 @@ const SettingsPage: React.FC = () => {
         }),
       );
     } catch (error: any) {
-      Alert.alert('Error logging out', error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Failed to log out',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     }
   };
 
-  const handleDeleteAccount = async () => {
-    const {error} = await supabase.auth.admin.deleteUser(user?.id || '');
-    // problem for later tbh
-  };
-
   const toggleAdminStatus = async (value: boolean) => {
-    if (!user) return;
-
+    if (!user) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'User not found',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
+      return;
+    }
     try {
       const {error} = await supabase
         .from('profiles')
@@ -53,14 +70,35 @@ const SettingsPage: React.FC = () => {
         .eq('id', user.id);
 
       if (error) throw error;
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Admin status updated successfully',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     } catch (error: any) {
-      console.error('Error updating admin status:', error);
-      Alert.alert('Error updating admin status', error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Failed to update admin status',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     }
   };
 
   const toggleProviderStatus = async (value: boolean) => {
-    if (!user) return;
+    if (!user) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'User not found',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
+      return;
+    }
 
     try {
       const {error} = await supabase
@@ -69,74 +107,152 @@ const SettingsPage: React.FC = () => {
         .eq('id', user.id);
 
       if (error) throw error;
+
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Provider status updated successfully',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
     } catch (error: any) {
-      console.error('Error updating provider status:', error);
-      Alert.alert('Error updating provider status', error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Failed to update provider status',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
     }
   };
 
-  const handleEditProfileChange = () => {
-    router.push('/settings/editProfile');
-  };
-
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   return (
-    <ScrollView style={{flex: 1}}>
-      <View style={{padding: 20}}>
-        {/* User Info Card */}
-        <View
-          style={{
-            backgroundColor: '#f3f4f6',
-            borderRadius: 8,
-            padding: 16,
-            marginBottom: 20,
-          }}
-        >
-          <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 12}}>
-            User Information
-          </Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <User size={24} color={colors.text} />
+            <Text style={styles.cardTitle}>User Information</Text>
+          </View>
           {profile && (
-            <View>
-              <Text>ID: {profile.id}</Text>
-              <Text>
+            <View style={styles.profileInfo}>
+              <Text style={styles.infoText}>ID: {profile.id}</Text>
+              <Text style={styles.infoText}>
                 Name: {profile.first_name} {profile.last_name}
               </Text>
-              <Text>Email: {profile.email}</Text>
-              <Text>Phone: {profile.phone_number}</Text>
-              <Text>Admin: {profile.isadmin ? 'True' : 'False'}</Text>
-              <Switch
-                value={profile.isadmin}
-                onValueChange={toggleAdminStatus}
-              />
-              <Text>Provider: {profile.isprovider ? 'True' : 'False'}</Text>
-              <Switch
-                value={profile.isprovider}
-                onValueChange={toggleProviderStatus}
-              />
-              <Text>Status: {profile.is_active ? 'Active' : 'Inactive'}</Text>
+              <Text style={styles.infoText}>Email: {profile.email}</Text>
+              <Text style={styles.infoText}>Phone: {profile.phone_number}</Text>
+
+              <View style={styles.switchContainer}>
+                <Text style={styles.infoText}>Admin</Text>
+                <Switch
+                  value={profile.isadmin}
+                  onValueChange={toggleAdminStatus}
+                />
+              </View>
+
+              <View style={styles.switchContainer}>
+                <Text style={styles.infoText}>Provider</Text>
+                <Switch
+                  value={profile.isprovider}
+                  onValueChange={toggleProviderStatus}
+                />
+              </View>
+
+              <Text style={styles.infoText}>
+                Status: {profile.is_active ? 'Active' : 'Inactive'}
+              </Text>
             </View>
           )}
         </View>
+
         <TouchableOpacity
-          style={{
-            backgroundColor: colors.primary,
-            padding: 10,
-            borderRadius: 8,
-            alignItems: 'center',
-          }}
-          onPress={handleEditProfileChange}
+          style={[styles.button, {backgroundColor: colors.primary}]}
+          onPress={() => router.push('/settings/editProfile')}
         >
-          <Text style={{color: 'white'}}>Edit Profile</Text>
+          <UserCog size={20} color="white" />
+          <Text style={styles.buttonText}>Edit Profile</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={signOut}>
-          <Text>Logout</Text>
+
+        <TouchableOpacity
+          style={[styles.button, {backgroundColor: '#dc2626'}]}
+          onPress={handleLogout}
+        >
+          <LogOut size={20} color="white" />
+          <Text style={styles.buttonText}>Logout</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  profileInfo: {
+    gap: 8,
+  },
+  infoText: {
+    fontSize: 16,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    gap: 8,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
 export default SettingsPage;
