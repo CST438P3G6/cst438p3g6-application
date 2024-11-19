@@ -112,13 +112,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: '#f9f9f9', 
+    borderRadius: 10,
     padding: 16,
     marginBottom: 12,
-    elevation: 5,
+    elevation: 6, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.3,
+    shadowRadius: 4, 
+    borderWidth: 1,
+    borderColor: '#ddd', 
     flexDirection: 'row',
   },
+  
   businessImage: {
     width: 60,
     height: 60,
