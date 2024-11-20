@@ -12,6 +12,7 @@ import {Plus, Eye, Trash2, Settings} from 'lucide-react-native';
 import {useUserBusinesses} from '@/hooks/useUserBusiness';
 import {supabase} from '@/utils/supabase';
 import {useUser} from '@/context/UserContext';
+import Toast from 'react-native-toast-message';
 
 interface Business {
   id: string;
@@ -46,9 +47,21 @@ export default function ProviderDashboard() {
         .eq('id', businessId);
 
       if (error) throw error;
-      Alert.alert('Success', 'Business deleted successfully');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Business deleted successfully',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     } catch (error) {
-      Alert.alert('Error', 'Failed to delete business');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to delete business',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
       console.error(error);
     }
   };

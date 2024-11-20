@@ -5,11 +5,10 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
-  Switch,
 } from 'react-native';
 import {useRouter} from 'expo-router';
+import toast from 'react-native-toast-message';
 import {supabase} from '@/utils/supabase';
 import {
   Mail,
@@ -32,13 +31,31 @@ export default function LoginPage() {
     try {
       const {error} = await supabase.auth.signInWithPassword({email, password});
       if (error) {
-        Alert.alert('Error', error.message);
+        toast.show({
+          type: 'error',
+          text1: 'Sign In Error',
+          text2: error.message,
+          position: 'bottom',
+          visibilityTime: 1000,
+        });
       } else {
-        console.log('User logged in');
+        toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Signed in successfully',
+          position: 'bottom',
+          visibilityTime: 1000,
+        });
         router.replace('/(tabs)/home');
       }
     } catch (error) {
-      Alert.alert('Error', (error as Error).message);
+      toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message,
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     } finally {
       setLoading(false);
     }

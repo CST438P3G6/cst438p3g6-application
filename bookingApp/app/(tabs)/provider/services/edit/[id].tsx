@@ -13,6 +13,7 @@ import {useRouter, useLocalSearchParams} from 'expo-router';
 import {ArrowLeft, Save} from 'lucide-react-native';
 import {useEditService} from '@/hooks/useEditService';
 import {supabase} from '@/utils/supabase';
+import Toast from 'react-native-toast-message';
 
 type Service = {
   id: number;
@@ -21,6 +22,16 @@ type Service = {
   description?: string;
   cost: number;
   time_needed: string;
+};
+
+const showToast = (type: 'success' | 'error', text1: string, text2: string) => {
+  Toast.show({
+    type,
+    text1,
+    text2,
+    position: 'bottom',
+    visibilityTime: 1000,
+  });
 };
 
 export default function EditServicePage() {
@@ -58,20 +69,20 @@ export default function EditServicePage() {
 
   const handleSave = async () => {
     if (!service.name || !service.cost || !service.time_needed) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      showToast('error', 'Error', 'Please fill in all required fields');
       return;
     }
 
-    const result = await editService(service);
-    if (result.error) {
-      Alert.alert('Error', result.error);
-    } else {
-      Alert.alert('Success', 'Service updated successfully', [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]);
+    try {
+      const result = await editService(service);
+      if (result.error) {
+        showToast('error', 'Error', result.error);
+      } else {
+        showToast('success', 'Success', 'Service updated successfully');
+        router.back();
+      }
+    } catch (error: any) {
+      showToast('error', 'Error', error.message || 'Failed to save changes');
     }
   };
 
@@ -132,14 +143,6 @@ export default function EditServicePage() {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={20} color="white" />
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.button, styles.saveButton]}
             onPress={handleSave}

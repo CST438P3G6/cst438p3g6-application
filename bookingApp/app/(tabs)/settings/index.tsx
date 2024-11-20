@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {CommonActions, useNavigation} from '@react-navigation/native';
 import {useTheme} from '@react-navigation/native';
 import {useUser} from '@/context/UserContext';
+import Toast from 'react-native-toast-message';
 import {LogOut, User, UserCog} from 'lucide-react-native';
 
 const SettingsPage: React.FC = () => {
@@ -27,7 +28,13 @@ const SettingsPage: React.FC = () => {
     try {
       await signOut();
       await AsyncStorage.removeItem('supabase.auth.token');
-      console.log('Logged out successfully');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Logged out successfully',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -35,12 +42,27 @@ const SettingsPage: React.FC = () => {
         }),
       );
     } catch (error: any) {
-      Alert.alert('Error logging out', error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Failed to log out',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     }
   };
 
   const toggleAdminStatus = async (value: boolean) => {
-    if (!user) return;
+    if (!user) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'User not found',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
+      return;
+    }
     try {
       const {error} = await supabase
         .from('profiles')
@@ -48,14 +70,36 @@ const SettingsPage: React.FC = () => {
         .eq('id', user.id);
 
       if (error) throw error;
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Admin status updated successfully',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     } catch (error: any) {
-      console.error('Error updating admin status:', error);
-      Alert.alert('Error updating admin status', error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Failed to update admin status',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     }
   };
 
   const toggleProviderStatus = async (value: boolean) => {
-    if (!user) return;
+    if (!user) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'User not found',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
+      return;
+    }
+
     try {
       const {error} = await supabase
         .from('profiles')
@@ -63,9 +107,22 @@ const SettingsPage: React.FC = () => {
         .eq('id', user.id);
 
       if (error) throw error;
+
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Provider status updated successfully',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
     } catch (error: any) {
-      console.error('Error updating provider status:', error.message);
-      Alert.alert('Error updating provider status', error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Failed to update provider status',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
     }
   };
 
@@ -80,7 +137,6 @@ const SettingsPage: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* User Info Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <User size={24} color={colors.text} />
@@ -118,7 +174,6 @@ const SettingsPage: React.FC = () => {
           )}
         </View>
 
-        {/* Actions */}
         <TouchableOpacity
           style={[styles.button, {backgroundColor: colors.primary}]}
           onPress={() => router.push('/settings/editProfile')}
@@ -133,9 +188,6 @@ const SettingsPage: React.FC = () => {
         >
           <LogOut size={20} color="white" />
           <Text style={styles.buttonText}>Logout</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={signOut}>
-          <Text>Logout</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

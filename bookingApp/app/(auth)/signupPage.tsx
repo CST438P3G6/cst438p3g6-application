@@ -5,12 +5,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   Switch,
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import {supabase} from '@/utils/supabase';
+import Toast from 'react-native-toast-message';
 import {UserPlus, Mail, Lock, User, Phone} from 'lucide-react-native';
 
 export default function SignUpPage() {
@@ -26,11 +26,23 @@ export default function SignUpPage() {
 
   const validateInputs = () => {
     if (!email || !password || !firstName || !lastName || !phoneNumber) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Please fill in all required fields',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
       return false;
     }
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      Toast.show({
+        type: 'error',
+        text1: 'Password Error',
+        text2: 'Password must be at least 6 characters long',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
       return false;
     }
     return true;
@@ -41,45 +53,46 @@ export default function SignUpPage() {
 
     setLoading(true);
     try {
-      const {
-        data: {user},
-        error: signUpError,
-      } = await supabase.auth.signUp({
+      const {error} = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             first_name: firstName,
             last_name: lastName,
+            phone_number: phoneNumber,
+            is_admin: isAdmin,
+            is_provider: isProvider,
           },
         },
       });
 
-      if (signUpError) throw signUpError;
-      if (!user) throw new Error('User creation failed');
-
-      const {error: profileError} = await supabase
-        .from('profiles')
-        .update({
-          first_name: firstName,
-          last_name: lastName,
-          phone_number: phoneNumber,
-          isadmin: isAdmin,
-          isprovider: isProvider,
-          is_active: true,
-        })
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
-
-      Alert.alert(
-        'Success',
-        'Account created successfully! Please check your email to verify your account.',
-        [{text: 'OK', onPress: () => router.push('/(auth)/loginPage')}],
-      );
+      if (error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Sign Up Error',
+          text2: error.message,
+          position: 'bottom',
+          visibilityTime: 1000,
+        });
+      } else {
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Account created successfully! Please check your email.',
+          position: 'bottom',
+          visibilityTime: 1000,
+        });
+        router.replace('/(auth)/loginPage');
+      }
     } catch (error) {
-      console.error('SignUp error:', error);
-      Alert.alert('Error', (error as Error).message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'An unexpected error occurred',
+        position: 'bottom',
+        visibilityTime: 1000,
+      });
     } finally {
       setLoading(false);
     }
