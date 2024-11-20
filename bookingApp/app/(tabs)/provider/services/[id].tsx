@@ -10,17 +10,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {useRouter, useLocalSearchParams} from 'expo-router';
-import {
-  Plus,
-  Eye,
-  Trash2,
-  Settings,
-  ArrowLeft,
-  Clock,
-  DollarSign,
-} from 'lucide-react-native';
+import {Plus, Eye, Trash2, Settings} from 'lucide-react-native';
 import {supabase} from '@/utils/supabase';
 import Toast from 'react-native-toast-message';
+import {useDeactivateService} from '@/hooks/useDeactivateService';
 
 interface Service {
   id: number;
@@ -38,11 +31,11 @@ export default function BusinessServices() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchServices = async () => {
     setLoading(true);
-    setError(null);
+    setFetchError(null);
 
     const {data, error} = await supabase
       .from('service')
@@ -51,8 +44,8 @@ export default function BusinessServices() {
 
     setLoading(false);
 
-    if (error) {
-      setError(error.message);
+    if (fetchError) {
+      setFetchError(error.message);
     } else {
       setServices(data as Service[]);
     }
@@ -76,9 +69,22 @@ export default function BusinessServices() {
           schema: 'public',
           table: 'service',
         },
-        async (payload) => {
-          // Refetch data when any change occurs
-          await fetchServices();
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setServices((prev) => [payload.new as Service, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setServices((prev) =>
+              prev.map((item) =>
+                item.id === (payload.new as Service).id
+                  ? (payload.new as Service)
+                  : item,
+              ),
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setServices((prev) =>
+              prev.filter((item) => item.id !== payload.old.id),
+            );
+          }
         },
       )
       .subscribe();
@@ -103,19 +109,29 @@ export default function BusinessServices() {
     });
   };
 
-  const handleDeleteService = async (serviceId: number) => {
-    try {
-      const {error} = await supabase
-        .from('service')
-        .delete()
-        .eq('id', serviceId);
+  const {
+    deactivateService,
+    loading: deactivating,
+    error,
+  } = useDeactivateService();
 
-      if (error) throw error;
-      showToast('success', 'Success', 'Service deleted successfully');
-      await fetchServices();
-    } catch (error: any) {
-      showToast('error', 'Error', error.message || 'Failed to delete service');
-      console.error(error);
+  const handleDeleteService = async (serviceId: number) => {
+    if (deactivating) {
+      showToast('error', 'Please wait', 'Service is being deactivated');
+      return;
+    }
+
+    const success = await deactivateService(serviceId);
+
+    if (success) {
+      showToast(
+        'success',
+        'Service Deactivated',
+        'The service has been deactivated successfully',
+      );
+      setServices((prev) => prev.filter((service) => service.id !== serviceId));
+    } else {
+      showToast('error', 'Error', error || 'Failed to deactivate service');
     }
   };
 
@@ -164,7 +180,7 @@ export default function BusinessServices() {
   if (error) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text>Error: {error}</Text>
+        <Text>Error: {fetchError}</Text>
       </View>
     );
   }
@@ -186,16 +202,10 @@ export default function BusinessServices() {
           <Plus size={16} color="white" />
           <Text style={{marginLeft: 8, color: 'white'}}>Create Service</Text>
         </TouchableOpacity>
-        <Text style={{fontSize: 24, fontWeight: 'bold', marginTop: 8}}>
-          Services
-        </Text>
       </View>
 
       <FlatList
         data={services}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
         renderItem={renderServiceItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{flexGrow: 1}}

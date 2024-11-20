@@ -7,10 +7,9 @@ export default function AdminLayout() {
   const {profile} = useUser();
   const router = useRouter();
 
-  // its a redirect but i think ima use something else to handle this
   useEffect(() => {
     if (profile && !profile.isadmin) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/home');
     }
   }, [profile]);
 
