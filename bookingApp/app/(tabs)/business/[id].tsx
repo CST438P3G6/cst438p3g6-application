@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   FlatList,
@@ -13,8 +13,8 @@ import {
   Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useLocalSearchParams } from 'expo-router';
-import { supabase } from '@/utils/supabase';
+import {useLocalSearchParams} from 'expo-router';
+import {supabase} from '@/utils/supabase';
 import {
   Star,
   Clock,
@@ -42,7 +42,7 @@ type Service = {
 };
 
 export default function BusinessScreen() {
-  const { id } = useLocalSearchParams();
+  const {id} = useLocalSearchParams();
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,14 +51,18 @@ export default function BusinessScreen() {
   const [selectedEndTime, setSelectedEndTime] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState<{
     type: 'start' | 'end' | null;
-  }>({ type: null });
+  }>({type: null});
 
   useEffect(() => {
     async function fetchData() {
       try {
         const [businessResponse, servicesResponse] = await Promise.all([
           supabase.from('business').select('*').eq('id', id).single(),
-          supabase.from('service').select('*').eq('business_id', id).eq('is_active', true),
+          supabase
+            .from('service')
+            .select('*')
+            .eq('business_id', id)
+            .eq('is_active', true),
         ]);
 
         if (businessResponse.error) throw businessResponse.error;
@@ -86,17 +90,19 @@ export default function BusinessScreen() {
     } else if (showPicker.type === 'end' && selectedDate) {
       setSelectedEndTime(selectedDate);
     }
-    setShowPicker({ type: null });
+    setShowPicker({type: null});
   };
 
   const showDateTimePicker = (type: 'start' | 'end') => {
-    setShowPicker({ type });
+    setShowPicker({type});
   };
 
-  const renderServiceItem = ({ item }: { item: Service }) => (
+  const renderServiceItem = ({item}: {item: Service}) => (
     <View style={styles.serviceCard}>
       <Text style={styles.serviceName}>{item.name}</Text>
-      {item.description && <Text style={styles.description}>{item.description}</Text>}
+      {item.description && (
+        <Text style={styles.description}>{item.description}</Text>
+      )}
       <View style={styles.detailsRow}>
         <View style={styles.detail}>
           <DollarSign size={16} />
@@ -159,12 +165,16 @@ export default function BusinessScreen() {
             <Text style={styles.modalTitle}>Select Start and End Time</Text>
             <TouchableOpacity onPress={() => showDateTimePicker('start')}>
               <Text style={styles.timeSelector}>
-                {selectedStartTime ? selectedStartTime.toLocaleString() : 'Select Start Time'}
+                {selectedStartTime
+                  ? selectedStartTime.toLocaleString()
+                  : 'Select Start Time'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => showDateTimePicker('end')}>
               <Text style={styles.timeSelector}>
-                {selectedEndTime ? selectedEndTime.toLocaleString() : 'Select End Time'}
+                {selectedEndTime
+                  ? selectedEndTime.toLocaleString()
+                  : 'Select End Time'}
               </Text>
             </TouchableOpacity>
             {showPicker.type && (
@@ -225,10 +235,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   },
   serviceName: {
     fontSize: 18,
