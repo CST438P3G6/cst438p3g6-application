@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   FlatList,
-  Alert,
   ActivityIndicator,
   Text,
   StyleSheet,
@@ -23,6 +22,9 @@ import {
   Mail,
   MapPin,
 } from 'lucide-react-native';
+import {useCreateAppointment} from '@/hooks/useCreateAppointment';
+import {useUser} from '@/context/UserContext';
+import Toast from 'react-native-toast-message';
 
 type Business = {
   id: number;
@@ -52,6 +54,10 @@ export default function BusinessScreen() {
   const [showPicker, setShowPicker] = useState<{
     type: 'start' | 'end' | null;
   }>({type: null});
+  const {createAppointment, loading: creatingAppointment} =
+    useCreateAppointment();
+  const {user} = useUser();
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -81,7 +87,11 @@ export default function BusinessScreen() {
     fetchData();
   }, [id]);
 
-  const openModal = () => setModalVisible(true);
+  const openModal = (service: Service) => {
+    setSelectedService(service);
+    setModalVisible(true);
+  };
+
   const closeModal = () => setModalVisible(false);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
@@ -95,6 +105,38 @@ export default function BusinessScreen() {
 
   const showDateTimePicker = (type: 'start' | 'end') => {
     setShowPicker({type});
+  };
+
+  const handleBooking = async () => {
+    if (!selectedService || !selectedStartTime || !user) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please select all required fields',
+      });
+      return;
+    }
+
+    const {data, error} = await createAppointment(
+      selectedService.id,
+      user.id,
+      selectedStartTime.toISOString(),
+    );
+
+    if (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Booking Failed',
+        text2: error,
+      });
+    } else {
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Appointment booked successfully!',
+      });
+      closeModal();
+    }
   };
 
   const renderServiceItem = ({item}: {item: Service}) => (
@@ -113,7 +155,7 @@ export default function BusinessScreen() {
           <Text>{item.time_needed}</Text>
         </View>
       </View>
-      <Button title="Book" onPress={openModal} />
+      <Button title="Book" onPress={() => openModal(item)} />
     </View>
   );
 
@@ -162,30 +204,28 @@ export default function BusinessScreen() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Start and End Time</Text>
+            <Text style={styles.modalTitle}>Book {selectedService?.name}</Text>
             <TouchableOpacity onPress={() => showDateTimePicker('start')}>
               <Text style={styles.timeSelector}>
                 {selectedStartTime
                   ? selectedStartTime.toLocaleString()
-                  : 'Select Start Time'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => showDateTimePicker('end')}>
-              <Text style={styles.timeSelector}>
-                {selectedEndTime
-                  ? selectedEndTime.toLocaleString()
-                  : 'Select End Time'}
+                  : 'Select Appointment Time'}
               </Text>
             </TouchableOpacity>
             {showPicker.type && (
               <DateTimePicker
-                value={new Date()}
+                value={selectedStartTime || new Date()}
                 mode="datetime"
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={handleDateChange}
               />
             )}
-            <Button title="Confirm" onPress={closeModal} />
+            <Button
+              title={creatingAppointment ? 'Booking...' : 'Confirm Booking'}
+              onPress={handleBooking}
+              disabled={creatingAppointment || !selectedStartTime}
+            />
+            <Button title="Cancel" onPress={closeModal} />
           </View>
         </View>
       </Modal>

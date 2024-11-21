@@ -135,6 +135,12 @@ export default function ProviderDashboard() {
         >
           <Text>View Services</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push(`/provider/appointments/${item.id}`)}
+          style={{padding: 8, backgroundColor: '#bae6fd', borderRadius: 20}}
+        >
+          <Text>View Appointments</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
