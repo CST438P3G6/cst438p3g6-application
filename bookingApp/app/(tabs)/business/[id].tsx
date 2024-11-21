@@ -10,10 +10,13 @@ import {
   Modal,
   TouchableOpacity,
   Platform,
+  Pressable,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {useLocalSearchParams} from 'expo-router';
 import {supabase} from '@/utils/supabase';
+import {useRouter} from 'expo-router'; 
+
 import {
   Star,
   Clock,
@@ -21,32 +24,18 @@ import {
   Phone,
   Mail,
   MapPin,
+  ChevronLeft, // Add back arrow icon
 } from 'lucide-react-native';
 import {useCreateAppointment} from '@/hooks/useCreateAppointment';
 import {useUser} from '@/context/UserContext';
 import Toast from 'react-native-toast-message';
 
-type Business = {
-  id: number;
-  name: string;
-  description: string;
-  phone_number: string;
-  address: string;
-  email: string;
-};
-
-type Service = {
-  id: number;
-  name: string;
-  description: string;
-  cost: number;
-  time_needed: string;
-};
-
 export default function BusinessScreen() {
   const {id} = useLocalSearchParams();
+  const router = useRouter(); 
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStartTime, setSelectedStartTime] = useState<Date | null>(null);
@@ -139,6 +128,17 @@ export default function BusinessScreen() {
     }
   };
 
+  const availableTimes = [
+    '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00'
+  ];
+
+  const handleTimeSelection = (time: string) => {
+    const date = new Date();
+    const [hours, minutes] = time.split(':').map(Number);
+    date.setHours(hours, minutes, 0);
+    setSelectedStartTime(date);
+  };
+
   const renderServiceItem = ({item}: {item: Service}) => (
     <View style={styles.serviceCard}>
       <Text style={styles.serviceName}>{item.name}</Text>
@@ -154,8 +154,13 @@ export default function BusinessScreen() {
           <Clock size={16} />
           <Text>{item.time_needed}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.bookButton}
+          onPress={() => openModal(item)}
+        >
+          <Text style={styles.bookButtonText}>Book</Text>
+        </TouchableOpacity>
       </View>
-      <Button title="Book" onPress={() => openModal(item)} />
     </View>
   );
 
@@ -169,6 +174,9 @@ export default function BusinessScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <ChevronLeft size={24} color="black" />
+      </Pressable>
       {business && (
         <View style={styles.businessInfo}>
           <Text style={styles.businessName}>{business.name}</Text>
@@ -189,6 +197,7 @@ export default function BusinessScreen() {
           </View>
         </View>
       )}
+
       <FlatList
         data={services}
         renderItem={renderServiceItem}
@@ -196,6 +205,7 @@ export default function BusinessScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.servicesList}
       />
+
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -205,20 +215,21 @@ export default function BusinessScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Book {selectedService?.name}</Text>
-            <TouchableOpacity onPress={() => showDateTimePicker('start')}>
+            <TouchableOpacity onPress={() => setShowPicker({type: 'start'})}>
               <Text style={styles.timeSelector}>
                 {selectedStartTime
-                  ? selectedStartTime.toLocaleString()
+                  ? selectedStartTime.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
                   : 'Select Appointment Time'}
               </Text>
             </TouchableOpacity>
-            {showPicker.type && (
-              <DateTimePicker
-                value={selectedStartTime || new Date()}
-                mode="datetime"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
-              />
+            {showPicker.type === 'start' && (
+              <View style={styles.timeSlotList}>
+                {availableTimes.map((time) => (
+                  <TouchableOpacity key={time} onPress={() => handleTimeSelection(time)}>
+                    <Text style={styles.timeSlot}>{time}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             )}
             <Button
               title={creatingAppointment ? 'Booking...' : 'Confirm Booking'}
@@ -236,6 +247,7 @@ export default function BusinessScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 20,
   },
   centered: {
     flex: 1,
@@ -275,16 +287,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
     elevation: 2,
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
   },
   serviceName: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8,
   },
   description: {
+    fontSize: 14,
     color: '#666',
-    marginBottom: 12,
+    marginVertical: 8,
   },
   detailsRow: {
     flexDirection: 'row',
@@ -295,6 +307,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  bookButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  bookButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -302,21 +325,38 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
-    padding: 20,
     backgroundColor: 'white',
+    padding: 20,
     borderRadius: 8,
+    width: '80%',
+    alignItems: 'center',
   },
   modalTitle: {
     fontSize: 20,
-    marginBottom: 16,
-    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
   timeSelector: {
+    fontSize: 18,
+    color: '#4CAF50',
+    marginBottom: 16,
+  },
+  timeSlotList: {
+    marginTop: 16,
+    backgroundColor: 'white',
     padding: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 4,
-    marginBottom: 10,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+  },
+  timeSlot: {
+    fontSize: 18,
+    paddingVertical: 8,
+    color: '#4CAF50',
     textAlign: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
 });
