@@ -1,6 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {View, ScrollView, TextInput, FlatList, Button} from 'react-native';
-import {Text} from '@/components/ui/text';
+import {
+  Text,
+  View,
+  ScrollView,
+  TextInput,
+  FlatList,
+  Button,
+} from 'react-native';
 import {supabase} from '@/utils/supabase';
 
 interface SearchBarProps {
