@@ -1,25 +1,41 @@
-import {View, Text, FlatList, TouchableOpacity, StyleSheet} from 'react-native';
-import {useViewUserAppointments} from '@/hooks/useViewUserAppointments';
-import {useCancelAppointment} from '@/hooks/useCancelAppointment';
-import {useUser} from '@/context/UserContext';
-import {Calendar, Clock, X, AlertCircle, Loader} from 'lucide-react-native';
-import {useState, useEffect} from 'react';
-import {supabase} from '@/utils/supabase';
+import { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { useViewUserAppointments } from '@/hooks/useViewUserAppointments';
+import { useCancelAppointment } from '@/hooks/useCancelAppointment';
+import { useUser } from '@/context/UserContext';
+import { Calendar, Clock, X } from 'lucide-react-native';
 
-// Add this interface
 interface Appointment {
   id: number;
   start_time: string;
   end_time: string;
   status: string;
-  // Add other fields as needed
 }
 
 export default function AppointmentsPage() {
-  const {profile} = useUser();
-  const {appointments, loading, error} = useViewUserAppointments(
-    profile?.id || '',
-  );
+  const { profile } = useUser();
+  const { appointments, loading, error } = useViewUserAppointments(profile?.id || '');
+  const { cancelAppointment, loading: cancelLoading, error: cancelError } = useCancelAppointment();
+
+  const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>(appointments || []);
+
+  useEffect(() => {
+    // Update filteredAppointments whenever appointments change
+    setFilteredAppointments(appointments || []);
+  }, [appointments]);
+
+  const handleCancel = async (appointmentId: number) => {
+    try {
+      await cancelAppointment(appointmentId);
+      
+      // Remove the canceled appointment from the list locally
+      setFilteredAppointments(prevAppointments =>
+        prevAppointments.filter(appointment => appointment.id !== appointmentId)
+      );
+    } catch (err) {
+      console.error('Error canceling appointment:', err);
+    }
+  };
 
   if (loading) {
     return (
@@ -40,16 +56,28 @@ export default function AppointmentsPage() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={appointments || []}
+        data={filteredAppointments || []}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
+        renderItem={({ item }) => renderItem(item, handleCancel, cancelLoading)}
         ListEmptyComponent={() => <Text>No appointments found</Text>}
       />
+      {cancelError && (
+        <Text style={styles.errorText}>
+          {cancelError}
+        </Text>
+      )}
+      {cancelLoading && (
+        <Text style={styles.loadingText}>Canceling appointment...</Text>
+      )}
     </View>
   );
 }
 
-const renderItem = ({item}: {item: Appointment}) => (
+const renderItem = (
+  item: Appointment,
+  handleCancel: (appointmentId: number) => void,
+  cancelLoading: boolean
+) => (
   <View style={styles.card}>
     <View style={styles.cardHeader}>
       <View style={styles.serviceInfo}>
@@ -58,8 +86,7 @@ const renderItem = ({item}: {item: Appointment}) => (
           style={[
             styles.statusBadge,
             {
-              backgroundColor:
-                item.status === 'confirmed' ? '#22c55e' : '#f59e0b',
+              backgroundColor: item.status === 'confirmed' ? '#22c55e' : '#f59e0b',
             },
           ]}
         >
@@ -82,10 +109,13 @@ const renderItem = ({item}: {item: Appointment}) => (
 
     <TouchableOpacity
       style={styles.cancelButton}
-      onPress={() => cancelAppointment(item.id)}
+      onPress={() => handleCancel(item.id)} // Call cancel on press
+      disabled={cancelLoading} // Disable button while canceling
     >
       <X size={16} color="#fff" />
-      <Text style={styles.cancelButtonText}>Cancel Appointment</Text>
+      <Text style={styles.cancelButtonText}>
+        {cancelLoading ? 'Canceling...' : 'Cancel Appointment'}
+      </Text>
     </TouchableOpacity>
   </View>
 );
@@ -95,27 +125,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9fafb',
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    padding: 16,
-    color: '#111827',
-  },
-  list: {
-    padding: 16,
-  },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
