@@ -20,7 +20,7 @@ export default function AppointmentsPage() {
   const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>(appointments || []);
 
   useEffect(() => {
-    // Update filteredAppointments whenever appointments change
+    
     setFilteredAppointments(appointments || []);
   }, [appointments]);
 
@@ -28,7 +28,7 @@ export default function AppointmentsPage() {
     try {
       await cancelAppointment(appointmentId);
       
-      // Remove the canceled appointment from the list locally
+
       setFilteredAppointments(prevAppointments =>
         prevAppointments.filter(appointment => appointment.id !== appointmentId)
       );
@@ -109,8 +109,8 @@ const renderItem = (
 
     <TouchableOpacity
       style={styles.cancelButton}
-      onPress={() => handleCancel(item.id)} // Call cancel on press
-      disabled={cancelLoading} // Disable button while canceling
+      onPress={() => handleCancel(item.id)} 
+      disabled={cancelLoading} 
     >
       <X size={16} color="#fff" />
       <Text style={styles.cancelButtonText}>

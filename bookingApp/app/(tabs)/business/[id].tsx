@@ -101,14 +101,6 @@ export default function BusinessScreen() {
       return;
     }
 
-    // Your logic for creating the appointment
-    // Assuming createAppointment logic is implemented somewhere
-    // const { data, error } = await createAppointment(
-    //   selectedService.id,
-    //   user.id,
-    //   selectedStartTime.toISOString(),
-    // );
-
     Toast.show({
       type: 'success',
       text1: 'Success',
@@ -137,7 +129,6 @@ export default function BusinessScreen() {
     const selectedStartTime = new Date();
     selectedStartTime.setHours(hours, minutes, 0);
 
-    // Check if the selected start time overlaps with any existing appointments
     const isAvailable = !appointments?.some((appointment) => {
       const appointmentStart = new Date(appointment.start_time);
       const appointmentEnd = new Date(appointment.end_time);
@@ -158,7 +149,7 @@ export default function BusinessScreen() {
     selectedTime.setHours(hours, minutes, 0);
 
     setSelectedStartTime(selectedTime);
-    setShowPicker({ type: 'end' }); // Automatically show the end time picker
+    setShowPicker({ type: 'end' });
   };
 
   const renderServiceItem = ({ item }: { item: Service }) => (
