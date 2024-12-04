@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, ActivityIndicator, Alert, TextInput, Image, ScrollView } from 'react-native';
+import { View, Text, Button, StyleSheet, ActivityIndicator, Alert, TextInput, Image, ScrollView, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAddBusinessImages } from '@/hooks/useAddBusinessImages';
 
@@ -29,11 +29,20 @@ export default function AddBusinessImagesPage() {
         }
 
         try {
-            const files = await Promise.all(images.map(async (image) => {
-                const response = await fetch(image);
-                const blob = await response.blob();
-                return new File([blob], `business_${businessId}_${Date.now()}.jpg`, { type: 'image/jpeg' });
-            }));
+            let files;
+            if (Platform.OS === 'web') {
+                files = await Promise.all(images.map(async (image, index) => {
+                    const response = await fetch(image);
+                    const blob = await response.blob();
+                    return new File([blob], `business_${businessId}_${Date.now()}_${index}.jpg`, { type: 'image/jpeg' });
+                }));
+            } else {
+                files = images.map((image, index) => ({
+                    uri: image,
+                    name: `business_${businessId}_${Date.now()}_${index}.jpg`,
+                    type: 'image/jpeg',
+                }));
+            }
 
             const result = await uploadImages(files, parseInt(businessId));
 

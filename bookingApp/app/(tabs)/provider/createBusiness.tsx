@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { View, TextInput, Button, Text, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, Platform } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useCreateBusiness } from '@/hooks/useCreateBusiness';
 import { useUpsertBusinessHours } from '@/hooks/useUpsertBusinessHours';
+import { useAddBusinessImages } from '@/hooks/useAddBusinessImages';
 import Toast from 'react-native-toast-message';
 
 type BusinessHour = {
@@ -23,9 +24,6 @@ const daysOfWeek = [
   'Sunday',
 ];
 
-const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
-const minutes = ['00', '15', '30', '45'];
-
 export default function CreateBusiness() {
   const router = useRouter();
   const [description, setDescription] = useState('');
@@ -33,8 +31,10 @@ export default function CreateBusiness() {
   const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const { createBusiness, loading, error } = useCreateBusiness();
   const { upsertBusinessHours, loading: upsertLoading, error: upsertError } = useUpsertBusinessHours();
+  const { uploadImages, loading: uploadLoading, error: uploadError } = useAddBusinessImages();
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>(
       daysOfWeek.map((day) => ({
         business_id: '',
@@ -129,6 +129,7 @@ export default function CreateBusiness() {
         visibilityTime: 1000,
       });
       await handleSaveBusinessHours(data.id);
+      await handleUploadImages(data.id);
       router.push('/provider');
     } else {
       Toast.show({
@@ -138,6 +139,55 @@ export default function CreateBusiness() {
         position: 'bottom',
         visibilityTime: 1000,
       });
+    }
+  };
+
+  const pickImages = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImages(result.assets.map(asset => asset.uri));
+    }
+  };
+
+  const handleUploadImages = async (businessId: string) => {
+    if (images.length === 0) {
+      return;
+    }
+
+    try {
+      let files;
+      if (Platform.OS === 'web') {
+        files = await Promise.all(images.map(async (image, index) => {
+          const response = await fetch(image);
+          const blob = await response.blob();
+          return new File([blob], `business_${businessId}_${Date.now()}_${index}.jpg`, { type: 'image/jpeg' });
+        }));
+      } else {
+        files = images.map((image, index) => ({
+          uri: image,
+          name: `business_${businessId}_${Date.now()}_${index}.jpg`,
+          type: 'image/jpeg',
+        }));
+      }
+
+      const result = await uploadImages(files, parseInt(businessId));
+
+      if (result.error) {
+        Alert.alert('Error uploading images', result.error);
+      } else {
+        Alert.alert('Success', 'Images uploaded successfully');
+        setImages([]);
+      }
+    } catch (uploadError) {
+      console.error('Upload error:', uploadError);
+      Alert.alert('Upload failed', 'An error occurred while uploading the images.');
     }
   };
 
@@ -182,55 +232,39 @@ export default function CreateBusiness() {
               </View>
               <View style={styles.timeRow}>
                 <Text style={styles.timeLabel}>Open:</Text>
-                <Picker
-                    selectedValue={hour.open_time.split(':')[0] || '09'}
-                    onValueChange={(value) =>
-                        handleTimeChange(index, 'open_time', value, hour.open_time.split(':')[1] || '00')
-                    }
-                    style={styles.picker}
-                >
-                  {hours.map((h) => (
-                      <Picker.Item key={h} label={h} value={h} />
-                  ))}
-                </Picker>
+                <TextInput
+                    style={styles.timeInput}
+                    value={hour.open_time.split(':')[0]}
+                    onChangeText={(value) => handleTimeChange(index, 'open_time', value, hour.open_time.split(':')[1])}
+                    keyboardType="numeric"
+                    maxLength={2}
+                />
                 <Text>:</Text>
-                <Picker
-                    selectedValue={hour.open_time.split(':')[1] || '00'}
-                    onValueChange={(value) =>
-                        handleTimeChange(index, 'open_time', hour.open_time.split(':')[0] || '09', value)
-                    }
-                    style={styles.picker}
-                >
-                  {minutes.map((m) => (
-                      <Picker.Item key={m} label={m} value={m} />
-                  ))}
-                </Picker>
+                <TextInput
+                    style={styles.timeInput}
+                    value={hour.open_time.split(':')[1]}
+                    onChangeText={(value) => handleTimeChange(index, 'open_time', hour.open_time.split(':')[0], value)}
+                    keyboardType="numeric"
+                    maxLength={2}
+                />
               </View>
               <View style={styles.timeRow}>
                 <Text style={styles.timeLabel}>Close:</Text>
-                <Picker
-                    selectedValue={hour.close_time.split(':')[0] || '17'}
-                    onValueChange={(value) =>
-                        handleTimeChange(index, 'close_time', value, hour.close_time.split(':')[1] || '00')
-                    }
-                    style={styles.picker}
-                >
-                  {hours.map((h) => (
-                      <Picker.Item key={h} label={h} value={h} />
-                  ))}
-                </Picker>
+                <TextInput
+                    style={styles.timeInput}
+                    value={hour.close_time.split(':')[0]}
+                    onChangeText={(value) => handleTimeChange(index, 'close_time', value, hour.close_time.split(':')[1])}
+                    keyboardType="numeric"
+                    maxLength={2}
+                />
                 <Text>:</Text>
-                <Picker
-                    selectedValue={hour.close_time.split(':')[1] || '00'}
-                    onValueChange={(value) =>
-                        handleTimeChange(index, 'close_time', hour.close_time.split(':')[0] || '17', value)
-                    }
-                    style={styles.picker}
-                >
-                  {minutes.map((m) => (
-                      <Picker.Item key={m} label={m} value={m} />
-                  ))}
-                </Picker>
+                <TextInput
+                    style={styles.timeInput}
+                    value={hour.close_time.split(':')[1]}
+                    onChangeText={(value) => handleTimeChange(index, 'close_time', hour.close_time.split(':')[0], value)}
+                    keyboardType="numeric"
+                    maxLength={2}
+                />
               </View>
               <TouchableOpacity
                   style={styles.closedButton}
@@ -240,14 +274,21 @@ export default function CreateBusiness() {
               </TouchableOpacity>
             </View>
         ))}
+        <Text style={styles.subtitle}>Business Images</Text>
+        <Button title="Pick images from camera roll" onPress={pickImages} />
+        <ScrollView horizontal style={styles.imagePreview}>
+          {images.map((image, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{ uri: image }} style={styles.image} />
+                <Text>Image {index + 1}</Text>
+              </View>
+          ))}
+        </ScrollView>
+        <Button title="Create Business" onPress={handleCreateBusiness} disabled={loading || uploadLoading} />
+        {(loading || uploadLoading) && <ActivityIndicator size="large" color="#0000ff" />}
         {error && <Text style={styles.errorText}>{error}</Text>}
         {upsertError && <Text style={styles.errorText}>{upsertError}</Text>}
-        {upsertLoading && <ActivityIndicator size="large" color="#0000ff" />}
-        {loading ? (
-            <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-            <Button title="Create Business" onPress={handleCreateBusiness} />
-        )}
+        {uploadError && <Text style={styles.errorText}>{uploadError}</Text>}
       </ScrollView>
   );
 }
@@ -295,7 +336,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 10,
     alignSelf: 'flex-start',
-
   },
   closedButtonText: {
     color: '#fff',
@@ -311,8 +351,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 10,
   },
-  picker: {
-    width: 70,
+  timeInput: {
+    width: 40,
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    textAlign: 'center',
+  },
+  imagePreview: {
+    marginVertical: 15,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  image: {
+    width: 100,
+    height: 75,
+    marginBottom: 5,
   },
   errorText: {
     fontSize: 16,

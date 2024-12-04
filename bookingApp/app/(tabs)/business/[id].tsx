@@ -9,24 +9,17 @@ import {
   Button,
   Modal,
   TouchableOpacity,
-  Platform,
   Alert,
+  Image,
+  ScrollView,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/utils/supabase';
-import {
-  Star,
-  Clock,
-  DollarSign,
-  Phone,
-  Mail,
-  MapPin,
-} from 'lucide-react-native';
 import { useCreateAppointment } from '@/hooks/useCreateAppointment';
 import { useUser } from '@/context/UserContext';
 import Toast from 'react-native-toast-message';
 import { useViewBusinessHours } from '@/hooks/useViewBusinessHours';
+import { useViewBusinessImages } from '@/hooks/useViewBusinessImages';
 
 type Business = {
   id: number;
@@ -53,26 +46,20 @@ export default function BusinessScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStartTime, setSelectedStartTime] = useState<Date | null>(null);
   const [selectedEndTime, setSelectedEndTime] = useState<Date | null>(null);
-  const [showPicker, setShowPicker] = useState<{
-    type: 'start' | 'end' | null;
-  }>({ type: null });
-  const { createAppointment, loading: creatingAppointment } =
-      useCreateAppointment();
+  const [showPicker, setShowPicker] = useState<{ type: 'start' | 'end' | null }>({ type: null });
+  const { createAppointment, loading: creatingAppointment } = useCreateAppointment();
   const { user } = useUser();
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   const { businessHours, loading: hoursLoading, error: hoursError } = useViewBusinessHours(id as string);
+  const { images, loading: imagesLoading, error: imagesError } = useViewBusinessImages(id as string);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const [businessResponse, servicesResponse] = await Promise.all([
           supabase.from('business').select('*').eq('id', id).single(),
-          supabase
-              .from('service')
-              .select('*')
-              .eq('business_id', id)
-              .eq('is_active', true),
+          supabase.from('service').select('*').eq('business_id', id).eq('is_active', true),
         ]);
 
         if (businessResponse.error) throw businessResponse.error;
@@ -146,16 +133,12 @@ export default function BusinessScreen() {
   const renderServiceItem = ({ item }: { item: Service }) => (
       <View style={styles.serviceCard}>
         <Text style={styles.serviceName}>{item.name}</Text>
-        {item.description && (
-            <Text style={styles.description}>{item.description}</Text>
-        )}
+        {item.description && <Text style={styles.description}>{item.description}</Text>}
         <View style={styles.detailsRow}>
           <View style={styles.detail}>
-            <DollarSign size={16} />
             <Text>${item.cost}</Text>
           </View>
           <View style={styles.detail}>
-            <Clock size={16} />
             <Text>{item.time_needed}</Text>
           </View>
         </View>
@@ -163,7 +146,7 @@ export default function BusinessScreen() {
       </View>
   );
 
-  if (loading || hoursLoading) {
+  if (loading || hoursLoading || imagesLoading) {
     return (
         <View style={styles.centered}>
           <ActivityIndicator size="large" />
@@ -179,26 +162,36 @@ export default function BusinessScreen() {
               <Text style={styles.businessDescription}>{business.description}</Text>
               <View style={styles.contactInfo}>
                 <View style={styles.contactRow}>
-                  <Phone size={16} />
                   <Text>{business.phone_number}</Text>
                 </View>
                 <View style={styles.contactRow}>
-                  <Mail size={16} />
                   <Text>{business.email}</Text>
                 </View>
                 <View style={styles.contactRow}>
-                  <MapPin size={16} />
                   <Text>{business.address}</Text>
                 </View>
               </View>
               <View style={styles.businessHours}>
                 <Text style={styles.hoursTitle}>Business Hours</Text>
-                {businessHours.map((hour) => (
-                    <View key={hour.day} style={styles.hourRow}>
+                {businessHours.map((hour, index) => (
+                    <View key={index} style={styles.hourRow}>
                       <Text style={styles.day}>{hour.day}</Text>
                       <Text style={styles.time}>{hour.open_time} - {hour.close_time}</Text>
                     </View>
                 ))}
+              </View>
+              <View style={styles.businessImages}>
+                <Text style={styles.imagesTitle}>Business Images</Text>
+                <FlatList
+                    data={images}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <View style={styles.imageContainer}>
+                          <Image source={{ uri: item.image_url }} style={styles.image} resizeMode="contain" />
+                        </View>
+                    )}
+                    horizontal
+                />
               </View>
             </View>
         )}
@@ -220,23 +213,18 @@ export default function BusinessScreen() {
               <Text style={styles.modalTitle}>Book {selectedService?.name}</Text>
               <TouchableOpacity onPress={() => showDateTimePicker('start')}>
                 <Text style={styles.timeSelector}>
-                  {selectedStartTime
-                      ? selectedStartTime.toLocaleString()
-                      : 'Select Appointment Time'}
+                  {selectedStartTime ? selectedStartTime.toLocaleTimeString() : 'Select Start Time'}
                 </Text>
               </TouchableOpacity>
-              {showPicker.type && (
-                  <DateTimePicker
-                      value={selectedStartTime || new Date()}
-                      mode="datetime"
-                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                      onChange={handleDateChange}
-                  />
-              )}
+              <TouchableOpacity onPress={() => showDateTimePicker('end')}>
+                <Text style={styles.timeSelector}>
+                  {selectedEndTime ? selectedEndTime.toLocaleTimeString() : 'Select End Time'}
+                </Text>
+              </TouchableOpacity>
               <Button
-                  title={creatingAppointment ? 'Booking...' : 'Confirm Booking'}
+                  title="Book Appointment"
                   onPress={handleBooking}
-                  disabled={creatingAppointment || !selectedStartTime}
+                  disabled={creatingAppointment}
               />
               <Button title="Cancel" onPress={closeModal} />
             </View>
@@ -299,6 +287,22 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 16,
     color: '#666',
+  },
+  businessImages: {
+    marginTop: 16,
+  },
+  imagesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  imageContainer: {
+    marginBottom: 15,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    marginRight: 8,
   },
   servicesList: {
     padding: 16,
