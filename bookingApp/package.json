@@ -45,7 +45,9 @@
     "react-native-screens": "^4.0.0",
     "react-native-toast-message": "^2.2.1",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-web": "~0.19.10"
+    "react-native-web": "~0.19.10",
+    "react-time-range": "^1.0.4",
+    "react-time-range-picker": "^1.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

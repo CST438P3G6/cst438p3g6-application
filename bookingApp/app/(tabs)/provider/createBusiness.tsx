@@ -6,6 +6,9 @@ import { useCreateBusiness } from '@/hooks/useCreateBusiness';
 import { useUpsertBusinessHours } from '@/hooks/useUpsertBusinessHours';
 import { useAddBusinessImages } from '@/hooks/useAddBusinessImages';
 import Toast from 'react-native-toast-message';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 type BusinessHour = {
   business_id: string;
@@ -44,9 +47,11 @@ export default function CreateBusiness() {
       }))
   );
 
-  const handleTimeChange = (index: number, field: 'open_time' | 'close_time', hour: string, minute: string) => {
+  const handleTimeChange = (index: number, field: 'open_time' | 'close_time', date: Date) => {
     const updatedHours = [...businessHours];
-    updatedHours[index][field] = `${hour}:${minute}`;
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    updatedHours[index][field] = `${hours}:${minutes}`;
     setBusinessHours(updatedHours);
   };
 
@@ -103,6 +108,24 @@ export default function CreateBusiness() {
   };
 
   const handleCreateBusiness = async () => {
+    for (const hour of businessHours) {
+      const [openHour, openMinute] = hour.open_time.split(':').map(Number);
+      const [closeHour, closeMinute] = hour.close_time.split(':').map(Number);
+
+      if (!(openHour === 0 && openMinute === 0 && closeHour === 0 && closeMinute === 0)) {
+        if (openHour > closeHour || (openHour === closeHour && openMinute >= closeMinute)) {
+          Toast.show({
+            type: 'error',
+            text1: 'Invalid Time',
+            text2: `Open time must be before close time for ${hour.day}.`,
+            position: 'bottom',
+            visibilityTime: 1000,
+          });
+          return;
+        }
+      }
+    }
+
     const business = {
       name,
       description,
@@ -192,35 +215,41 @@ export default function CreateBusiness() {
   };
 
   return (
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Create Business</Text>
+      <ScrollView contentContainerStyle={{ ...styles.container, overflow: 'visible' }}>
+
+      <Text style={styles.title}>Create Business</Text>
         <TextInput
             style={styles.input}
             placeholder="Name"
+            placeholderTextColor="#999"
             value={name}
             onChangeText={setName}
         />
         <TextInput
             style={styles.input}
             placeholder="Description"
+            placeholderTextColor="#999"
             value={description}
             onChangeText={setDescription}
         />
         <TextInput
             style={styles.input}
             placeholder="Phone Number"
+            placeholderTextColor="#999"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
         />
         <TextInput
             style={styles.input}
             placeholder="Address"
+            placeholderTextColor="#999"
             value={address}
             onChangeText={setAddress}
         />
         <TextInput
             style={styles.input}
             placeholder="Email"
+            placeholderTextColor="#999"
             value={email}
             onChangeText={setEmail}
         />
@@ -232,39 +261,50 @@ export default function CreateBusiness() {
               </View>
               <View style={styles.timeRow}>
                 <Text style={styles.timeLabel}>Open:</Text>
-                <TextInput
-                    style={styles.timeInput}
-                    value={hour.open_time.split(':')[0]}
-                    onChangeText={(value) => handleTimeChange(index, 'open_time', value, hour.open_time.split(':')[1])}
-                    keyboardType="numeric"
-                    maxLength={2}
-                />
-                <Text>:</Text>
-                <TextInput
-                    style={styles.timeInput}
-                    value={hour.open_time.split(':')[1]}
-                    onChangeText={(value) => handleTimeChange(index, 'open_time', hour.open_time.split(':')[0], value)}
-                    keyboardType="numeric"
-                    maxLength={2}
-                />
+                {Platform.OS === 'web' ? (
+                    <View style={[styles.dropdownContainer, { zIndex: 1000 }]}>
+                      <DatePicker
+                          selected={new Date(`1970-01-01T${hour.open_time}:00`)}
+                          onChange={(date) => handleTimeChange(index, 'open_time', date as Date)}
+                          showTimeSelect
+                          showTimeSelectOnly
+                          timeIntervals={15}
+                          timeCaption="Time"
+                          dateFormat="h:mm aa"
+                          portalId="root-portal"
+                      />
+                    </View>
+                ) : (
+                    <DateTimePicker
+                        value={new Date(`1970-01-01T${hour.open_time}:00`)}
+                        mode="time"
+                        display="default"
+                        onChange={(event, date) => date && handleTimeChange(index, 'open_time', date)}
+                    />
+                )}
               </View>
               <View style={styles.timeRow}>
                 <Text style={styles.timeLabel}>Close:</Text>
-                <TextInput
-                    style={styles.timeInput}
-                    value={hour.close_time.split(':')[0]}
-                    onChangeText={(value) => handleTimeChange(index, 'close_time', value, hour.close_time.split(':')[1])}
-                    keyboardType="numeric"
-                    maxLength={2}
-                />
-                <Text>:</Text>
-                <TextInput
-                    style={styles.timeInput}
-                    value={hour.close_time.split(':')[1]}
-                    onChangeText={(value) => handleTimeChange(index, 'close_time', hour.close_time.split(':')[0], value)}
-                    keyboardType="numeric"
-                    maxLength={2}
-                />
+                {Platform.OS === 'web' ? (
+                    <View style={styles.dropdownContainer}>
+                      <DatePicker
+                          selected={new Date(`1970-01-01T${hour.close_time}:00`)}
+                          onChange={(date) => handleTimeChange(index, 'close_time', date as Date)}
+                          showTimeSelect
+                          showTimeSelectOnly
+                          timeIntervals={15}
+                          timeCaption="Time"
+                          dateFormat="h:mm aa"
+                      />
+                    </View>
+                ) : (
+                    <DateTimePicker
+                        value={new Date(`1970-01-01T${hour.close_time}:00`)}
+                        mode="time"
+                        display="default"
+                        onChange={(event, date) => date && handleTimeChange(index, 'close_time', date)}
+                    />
+                )}
               </View>
               <TouchableOpacity
                   style={styles.closedButton}
@@ -316,6 +356,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     paddingLeft: 8,
+    color: '#000',
   },
   hourContainer: {
     marginBottom: 20,
@@ -351,12 +392,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 10,
   },
-  timeInput: {
-    width: 40,
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    textAlign: 'center',
+  dropdownContainer: {
+    zIndex: 1000,
+    position: 'relative',
   },
   imagePreview: {
     marginVertical: 15,

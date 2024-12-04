@@ -127,6 +127,11 @@ export default function BusinessScreen() {
     return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }).format(date);
   };
 
+  const formatBusinessHours = (timeString: string) => {
+    const date = new Date(`1970-01-01T${timeString}`);
+    return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }).format(date);
+  };
+
   const handleBookAppointment = async (slotStart: string, slotEnd: string) => {
     if (!selectedService || !user) return;
 
@@ -196,7 +201,15 @@ export default function BusinessScreen() {
                 {businessHours.map((hour, index) => (
                     <View key={index} style={styles.hourRow}>
                       <Text style={styles.day}>{hour.day}</Text>
-                      <Text style={styles.time}>{hour.open_time} - {hour.close_time}</Text>
+
+                      {hour.open_time === '00:00:00' && hour.close_time === '00:00:00' ? (
+                          <Text style={styles.time}>Closed</Text>
+                      ) : (
+                          <Text style={styles.time}>
+
+                            {formatBusinessHours(hour.open_time)} - {formatBusinessHours(hour.close_time)}
+                          </Text>
+                      )}
                     </View>
                 ))}
               </View>
