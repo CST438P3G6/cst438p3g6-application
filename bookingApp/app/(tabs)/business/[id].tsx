@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -9,11 +9,12 @@ import {
   Button,
   Modal,
   TouchableOpacity,
-  Platform, Alert,
+  Platform,
+  Alert,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {useLocalSearchParams} from 'expo-router';
-import {supabase} from '@/utils/supabase';
+import { useLocalSearchParams } from 'expo-router';
+import { supabase } from '@/utils/supabase';
 import {
   Star,
   Clock,
@@ -22,9 +23,10 @@ import {
   Mail,
   MapPin,
 } from 'lucide-react-native';
-import {useCreateAppointment} from '@/hooks/useCreateAppointment';
-import {useUser} from '@/context/UserContext';
+import { useCreateAppointment } from '@/hooks/useCreateAppointment';
+import { useUser } from '@/context/UserContext';
 import Toast from 'react-native-toast-message';
+import { useViewBusinessHours } from '@/hooks/useViewBusinessHours';
 
 type Business = {
   id: number;
@@ -44,7 +46,7 @@ type Service = {
 };
 
 export default function BusinessScreen() {
-  const {id} = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,11 +55,13 @@ export default function BusinessScreen() {
   const [selectedEndTime, setSelectedEndTime] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState<{
     type: 'start' | 'end' | null;
-  }>({type: null});
-  const {createAppointment, loading: creatingAppointment} =
-    useCreateAppointment();
-  const {user} = useUser();
+  }>({ type: null });
+  const { createAppointment, loading: creatingAppointment } =
+      useCreateAppointment();
+  const { user } = useUser();
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  const { businessHours, loading: hoursLoading, error: hoursError } = useViewBusinessHours(id as string);
 
   useEffect(() => {
     async function fetchData() {
@@ -65,10 +69,10 @@ export default function BusinessScreen() {
         const [businessResponse, servicesResponse] = await Promise.all([
           supabase.from('business').select('*').eq('id', id).single(),
           supabase
-            .from('service')
-            .select('*')
-            .eq('business_id', id)
-            .eq('is_active', true),
+              .from('service')
+              .select('*')
+              .eq('business_id', id)
+              .eq('is_active', true),
         ]);
 
         if (businessResponse.error) throw businessResponse.error;
@@ -100,11 +104,11 @@ export default function BusinessScreen() {
     } else if (showPicker.type === 'end' && selectedDate) {
       setSelectedEndTime(selectedDate);
     }
-    setShowPicker({type: null});
+    setShowPicker({ type: null });
   };
 
   const showDateTimePicker = (type: 'start' | 'end') => {
-    setShowPicker({type});
+    setShowPicker({ type });
   };
 
   const handleBooking = async () => {
@@ -117,10 +121,10 @@ export default function BusinessScreen() {
       return;
     }
 
-    const {data, error} = await createAppointment(
-      selectedService.id,
-      user.id,
-      selectedStartTime.toISOString(),
+    const { data, error } = await createAppointment(
+        selectedService.id,
+        user.id,
+        selectedStartTime.toISOString(),
     );
 
     if (error) {
@@ -139,97 +143,106 @@ export default function BusinessScreen() {
     }
   };
 
-  const renderServiceItem = ({item}: {item: Service}) => (
-    <View style={styles.serviceCard}>
-      <Text style={styles.serviceName}>{item.name}</Text>
-      {item.description && (
-        <Text style={styles.description}>{item.description}</Text>
-      )}
-      <View style={styles.detailsRow}>
-        <View style={styles.detail}>
-          <DollarSign size={16} />
-          <Text>${item.cost}</Text>
+  const renderServiceItem = ({ item }: { item: Service }) => (
+      <View style={styles.serviceCard}>
+        <Text style={styles.serviceName}>{item.name}</Text>
+        {item.description && (
+            <Text style={styles.description}>{item.description}</Text>
+        )}
+        <View style={styles.detailsRow}>
+          <View style={styles.detail}>
+            <DollarSign size={16} />
+            <Text>${item.cost}</Text>
+          </View>
+          <View style={styles.detail}>
+            <Clock size={16} />
+            <Text>{item.time_needed}</Text>
+          </View>
         </View>
-        <View style={styles.detail}>
-          <Clock size={16} />
-          <Text>{item.time_needed}</Text>
-        </View>
+        <Button title="Book" onPress={() => openModal(item)} />
       </View>
-      <Button title="Book" onPress={() => openModal(item)} />
-    </View>
   );
 
-  if (loading) {
+  if (loading || hoursLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+        </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {business && (
-        <View style={styles.businessInfo}>
-          <Text style={styles.businessName}>{business.name}</Text>
-          <Text style={styles.businessDescription}>{business.description}</Text>
-          <View style={styles.contactInfo}>
-            <View style={styles.contactRow}>
-              <Phone size={16} />
-              <Text>{business.phone_number}</Text>
+      <SafeAreaView style={styles.container}>
+        {business && (
+            <View style={styles.businessInfo}>
+              <Text style={styles.businessName}>{business.name}</Text>
+              <Text style={styles.businessDescription}>{business.description}</Text>
+              <View style={styles.contactInfo}>
+                <View style={styles.contactRow}>
+                  <Phone size={16} />
+                  <Text>{business.phone_number}</Text>
+                </View>
+                <View style={styles.contactRow}>
+                  <Mail size={16} />
+                  <Text>{business.email}</Text>
+                </View>
+                <View style={styles.contactRow}>
+                  <MapPin size={16} />
+                  <Text>{business.address}</Text>
+                </View>
+              </View>
+              <View style={styles.businessHours}>
+                <Text style={styles.hoursTitle}>Business Hours</Text>
+                {businessHours.map((hour) => (
+                    <View key={hour.day} style={styles.hourRow}>
+                      <Text style={styles.day}>{hour.day}</Text>
+                      <Text style={styles.time}>{hour.open_time} - {hour.close_time}</Text>
+                    </View>
+                ))}
+              </View>
             </View>
-            <View style={styles.contactRow}>
-              <Mail size={16} />
-              <Text>{business.email}</Text>
-            </View>
-            <View style={styles.contactRow}>
-              <MapPin size={16} />
-              <Text>{business.address}</Text>
-            </View>
-          </View>
-        </View>
-      )}
-      <FlatList
-        data={services}
-        renderItem={renderServiceItem}
-        keyExtractor={(item) => item.id.toString()}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.servicesList}
-      />
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Book {selectedService?.name}</Text>
-            <TouchableOpacity onPress={() => showDateTimePicker('start')}>
-              <Text style={styles.timeSelector}>
-                {selectedStartTime
-                  ? selectedStartTime.toLocaleString()
-                  : 'Select Appointment Time'}
-              </Text>
-            </TouchableOpacity>
-            {showPicker.type && (
-              <DateTimePicker
-                value={selectedStartTime || new Date()}
-                mode="datetime"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
+        )}
+        <FlatList
+            data={services}
+            renderItem={renderServiceItem}
+            keyExtractor={(item) => item.id.toString()}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.servicesList}
+        />
+        <Modal
+            visible={modalVisible}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={closeModal}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Book {selectedService?.name}</Text>
+              <TouchableOpacity onPress={() => showDateTimePicker('start')}>
+                <Text style={styles.timeSelector}>
+                  {selectedStartTime
+                      ? selectedStartTime.toLocaleString()
+                      : 'Select Appointment Time'}
+                </Text>
+              </TouchableOpacity>
+              {showPicker.type && (
+                  <DateTimePicker
+                      value={selectedStartTime || new Date()}
+                      mode="datetime"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={handleDateChange}
+                  />
+              )}
+              <Button
+                  title={creatingAppointment ? 'Booking...' : 'Confirm Booking'}
+                  onPress={handleBooking}
+                  disabled={creatingAppointment || !selectedStartTime}
               />
-            )}
-            <Button
-              title={creatingAppointment ? 'Booking...' : 'Confirm Booking'}
-              onPress={handleBooking}
-              disabled={creatingAppointment || !selectedStartTime}
-            />
-            <Button title="Cancel" onPress={closeModal} />
+              <Button title="Cancel" onPress={closeModal} />
+            </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
   );
 }
 
@@ -265,6 +278,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  businessHours: {
+    marginTop: 16,
+  },
+  hoursTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  hourRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  day: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  time: {
+    fontSize: 16,
+    color: '#666',
   },
   servicesList: {
     padding: 16,
