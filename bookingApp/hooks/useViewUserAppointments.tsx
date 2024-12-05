@@ -9,6 +9,7 @@ type Appointment = {
   status: string;
   user_id: string;
   cost: number;
+  service_name: string;
 };
 
 export function useViewUserAppointments(userId: string) {
@@ -17,20 +18,33 @@ export function useViewUserAppointments(userId: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let subscription: any;
+
     const fetchAppointments = async () => {
       setLoading(true);
       setError(null);
 
       const {data, error} = await supabase
         .from('appointment')
-        .select('*')
+        .select(
+          `
+          *,
+          service:service_id (
+            name
+          )
+        `,
+        )
         .eq('user_id', userId);
 
       if (error) {
         setError(error.message);
         setAppointments(null);
       } else {
-        setAppointments(data as Appointment[]);
+        const transformedData = data.map((appointment: any) => ({
+          ...appointment,
+          service_name: appointment.service.name,
+        }));
+        setAppointments(transformedData as Appointment[]);
       }
 
       setLoading(false);
@@ -39,46 +53,23 @@ export function useViewUserAppointments(userId: string) {
     if (userId) {
       fetchAppointments();
 
-      const subscription = supabase
-        .channel('appointments_channel')
+      subscription = supabase
+        .channel('public:appointment')
         .on(
           'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'appointment',
-            filter: `user_id=eq.${userId}`,
-          },
+          {event: '*', schema: 'public', table: 'appointment'},
           (payload) => {
-            if (payload.eventType === 'INSERT') {
-              setAppointments((prev) =>
-                prev
-                  ? [...prev, payload.new as Appointment]
-                  : [payload.new as Appointment],
-              );
-            } else if (payload.eventType === 'UPDATE') {
-              setAppointments((prev) =>
-                prev
-                  ? prev.map((app) =>
-                      app.id === payload.new.id
-                        ? (payload.new as Appointment)
-                        : app,
-                    )
-                  : null,
-              );
-            } else if (payload.eventType === 'DELETE') {
-              setAppointments((prev) =>
-                prev ? prev.filter((app) => app.id !== payload.old.id) : null,
-              );
-            }
+            fetchAppointments();
           },
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(subscription);
-      };
     }
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, [userId]);
 
   return {appointments, loading, error};
