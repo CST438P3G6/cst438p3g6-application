@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -8,23 +8,22 @@ import {
   SafeAreaView,
   Button,
   Modal,
-  TouchableOpacity,
-  Platform, Alert,
+  Alert,
+  Image,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {useLocalSearchParams} from 'expo-router';
-import {supabase} from '@/utils/supabase';
-import {
-  Star,
-  Clock,
-  DollarSign,
-  Phone,
-  Mail,
-  MapPin,
-} from 'lucide-react-native';
-import {useCreateAppointment} from '@/hooks/useCreateAppointment';
-import {useUser} from '@/context/UserContext';
+import DatePicker from 'react-datepicker'; // Web-specific date picker
+import 'react-datepicker/dist/react-datepicker.css'; // Web-specific styles
+import { supabase } from '@/utils/supabase';
+import { useLocalSearchParams } from 'expo-router';
+import { useCreateAppointment } from '@/hooks/useCreateAppointment';
+import { useUser } from '@/context/UserContext';
 import Toast from 'react-native-toast-message';
+import { useViewBusinessHours } from '@/hooks/useViewBusinessHours';
+import { useViewBusinessImages } from '@/hooks/useViewBusinessImages';
+import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 
 type Business = {
   id: number;
@@ -44,31 +43,34 @@ type Service = {
 };
 
 export default function BusinessScreen() {
-  const {id} = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
+  const businessId = Array.isArray(id) ? id[0] : id; // Ensure id is a string or number
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedStartTime, setSelectedStartTime] = useState<Date | null>(null);
-  const [selectedEndTime, setSelectedEndTime] = useState<Date | null>(null);
-  const [showPicker, setShowPicker] = useState<{
-    type: 'start' | 'end' | null;
-  }>({type: null});
-  const {createAppointment, loading: creatingAppointment} =
-    useCreateAppointment();
-  const {user} = useUser();
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const { createAppointment, loading: creatingAppointment } = useCreateAppointment();
+  const { user } = useUser();
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  const { businessHours, loading: hoursLoading, error: hoursError } = useViewBusinessHours(businessId as string);
+  const { images, loading: imagesLoading, error: imagesError } = useViewBusinessImages(businessId as string);
+
+  const { availableTimeSlots, loading: slotsLoading, error: slotsError } = useAvailableTimeSlots(
+      businessId as number,
+      selectedDate?.toISOString() || '',
+      selectedDate?.toISOString() || '',
+      selectedService ? parseInt(selectedService.time_needed.split(':')[1], 10) : 0,
+      15
+  );
 
   useEffect(() => {
     async function fetchData() {
       try {
         const [businessResponse, servicesResponse] = await Promise.all([
-          supabase.from('business').select('*').eq('id', id).single(),
-          supabase
-            .from('service')
-            .select('*')
-            .eq('business_id', id)
-            .eq('is_active', true),
+          supabase.from('business').select('*').eq('id', businessId).single(),
+          supabase.from('service').select('*').eq('business_id', businessId).eq('is_active', true),
         ]);
 
         if (businessResponse.error) throw businessResponse.error;
@@ -85,7 +87,7 @@ export default function BusinessScreen() {
     }
 
     fetchData();
-  }, [id]);
+  }, [businessId]);
 
   const openModal = (service: Service) => {
     setSelectedService(service);
@@ -94,142 +96,182 @@ export default function BusinessScreen() {
 
   const closeModal = () => setModalVisible(false);
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (showPicker.type === 'start' && selectedDate) {
-      setSelectedStartTime(selectedDate);
-    } else if (showPicker.type === 'end' && selectedDate) {
-      setSelectedEndTime(selectedDate);
-    }
-    setShowPicker({type: null});
-  };
-
-  const showDateTimePicker = (type: 'start' | 'end') => {
-    setShowPicker({type});
-  };
-
-  const handleBooking = async () => {
-    if (!selectedService || !selectedStartTime || !user) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please select all required fields',
-      });
-      return;
+  const renderDateSelector = () => {
+    if (Platform.OS === 'web') {
+      return (
+          <DatePicker
+              selected={selectedDate}
+              onChange={(date) => setSelectedDate(date as Date)}
+              inline
+          />
+      );
     }
 
-    const {data, error} = await createAppointment(
-      selectedService.id,
-      user.id,
-      selectedStartTime.toISOString(),
+    return (
+        <DateTimePicker
+            value={selectedDate || new Date()}
+            mode="date"
+            display="default"
+            onChange={(event, date) => date && setSelectedDate(date)}
+        />
     );
+  };
 
-    if (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Booking Failed',
-        text2: error,
-      });
-    } else {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).format(date);
+  };
+
+  const formatTime = (timeString: string) => {
+    const date = new Date(timeString);
+    return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }).format(date);
+  };
+
+  const formatBusinessHours = (timeString: string) => {
+    const date = new Date(`1970-01-01T${timeString}`);
+    return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }).format(date);
+  };
+
+  const handleBookAppointment = async (slotStart: string, slotEnd: string) => {
+    if (!selectedService || !user) return;
+
+    try {
+      await createAppointment(
+          selectedService.id,
+          user.id,
+          slotStart
+      );
       Toast.show({
         type: 'success',
-        text1: 'Success',
-        text2: 'Appointment booked successfully!',
+        text1: 'Appointment booked successfully!',
       });
       closeModal();
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to book appointment',
+      });
+      console.error(error);
     }
   };
 
-  const renderServiceItem = ({item}: {item: Service}) => (
-    <View style={styles.serviceCard}>
-      <Text style={styles.serviceName}>{item.name}</Text>
-      {item.description && (
-        <Text style={styles.description}>{item.description}</Text>
-      )}
-      <View style={styles.detailsRow}>
-        <View style={styles.detail}>
-          <DollarSign size={16} />
-          <Text>${item.cost}</Text>
+  const renderServiceItem = ({ item }: { item: Service }) => (
+      <View style={styles.serviceCard}>
+        <Text style={styles.serviceName}>{item.name}</Text>
+        {item.description && <Text style={styles.description}>{item.description}</Text>}
+        <View style={styles.detailsRow}>
+          <View style={styles.detail}>
+            <Text>${item.cost}</Text>
+          </View>
+          <View style={styles.detail}>
+            <Text>{item.time_needed}</Text>
+          </View>
         </View>
-        <View style={styles.detail}>
-          <Clock size={16} />
-          <Text>{item.time_needed}</Text>
-        </View>
+        <Button title="Book" onPress={() => openModal(item)} />
       </View>
-      <Button title="Book" onPress={() => openModal(item)} />
-    </View>
   );
 
-  if (loading) {
+  if (loading || hoursLoading || imagesLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+        </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {business && (
-        <View style={styles.businessInfo}>
-          <Text style={styles.businessName}>{business.name}</Text>
-          <Text style={styles.businessDescription}>{business.description}</Text>
-          <View style={styles.contactInfo}>
-            <View style={styles.contactRow}>
-              <Phone size={16} />
-              <Text>{business.phone_number}</Text>
+      <SafeAreaView style={styles.container}>
+        {business && (
+            <View style={styles.businessInfo}>
+              <Text style={styles.businessName}>{business.name}</Text>
+              <Text style={styles.businessDescription}>{business.description}</Text>
+              <View style={styles.contactInfo}>
+                <View style={styles.contactRow}>
+                  <Text>{business.phone_number}</Text>
+                </View>
+                <View style={styles.contactRow}>
+                  <Text>{business.email}</Text>
+                </View>
+                <View style={styles.contactRow}>
+                  <Text>{business.address}</Text>
+                </View>
+              </View>
+              <View style={styles.businessHours}>
+                <Text style={styles.hoursTitle}>Business Hours</Text>
+                {businessHours.map((hour, index) => (
+                    <View key={index} style={styles.hourRow}>
+                      <Text style={styles.day}>{hour.day}</Text>
+
+                      {hour.open_time === '00:00:00' && hour.close_time === '00:00:00' ? (
+                          <Text style={styles.time}>Closed</Text>
+                      ) : (
+                          <Text style={styles.time}>
+
+                            {formatBusinessHours(hour.open_time)} - {formatBusinessHours(hour.close_time)}
+                          </Text>
+                      )}
+                    </View>
+                ))}
+              </View>
+              <View style={styles.businessImages}>
+                <Text style={styles.imagesTitle}>Business Images</Text>
+                <FlatList
+                    data={images}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <View style={styles.imageContainer}>
+                          <Image source={{ uri: item.image_url }} style={styles.image} resizeMode="contain" />
+                        </View>
+                    )}
+                    horizontal
+                />
+              </View>
             </View>
-            <View style={styles.contactRow}>
-              <Mail size={16} />
-              <Text>{business.email}</Text>
-            </View>
-            <View style={styles.contactRow}>
-              <MapPin size={16} />
-              <Text>{business.address}</Text>
-            </View>
-          </View>
-        </View>
-      )}
-      <FlatList
-        data={services}
-        renderItem={renderServiceItem}
-        keyExtractor={(item) => item.id.toString()}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.servicesList}
-      />
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Book {selectedService?.name}</Text>
-            <TouchableOpacity onPress={() => showDateTimePicker('start')}>
-              <Text style={styles.timeSelector}>
-                {selectedStartTime
-                  ? selectedStartTime.toLocaleString()
-                  : 'Select Appointment Time'}
-              </Text>
-            </TouchableOpacity>
-            {showPicker.type && (
-              <DateTimePicker
-                value={selectedStartTime || new Date()}
-                mode="datetime"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
+        )}
+        <FlatList
+            data={services}
+            renderItem={renderServiceItem}
+            keyExtractor={(item) => item.id.toString()}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.servicesList}
+        />
+        <Modal
+            visible={modalVisible}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={closeModal}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Select a Date</Text>
+              {renderDateSelector()}
+              <Button title="View Available Appointments" onPress={() => {}} disabled={slotsLoading} />
+              <Button title="Cancel" onPress={closeModal} />
+              {slotsLoading && <ActivityIndicator size="large" color="#0000ff" />}
+              {slotsError && <Text style={styles.errorText}>{slotsError}</Text>}
+              <FlatList
+                  data={availableTimeSlots}
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={({ item }) => (
+                      <View style={styles.slotContainer}>
+                        <View style={styles.slotTextContainer}>
+                          <Text>{formatDate(item.slot_start)}</Text>
+                          <Text>{`${formatTime(item.slot_start)} - ${formatTime(item.slot_end)}`}</Text>
+                        </View>
+                        <Button
+                            title="Book"
+                            onPress={() => handleBookAppointment(item.slot_start, item.slot_end)}
+                            disabled={creatingAppointment}
+                        />
+                      </View>
+                  )}
+                  contentContainerStyle={styles.scrollView} // Use this to apply additional styles
+                  style={{ maxHeight: 300 }} // Limit FlatList height if needed
               />
-            )}
-            <Button
-              title={creatingAppointment ? 'Booking...' : 'Confirm Booking'}
-              onPress={handleBooking}
-              disabled={creatingAppointment || !selectedStartTime}
-            />
-            <Button title="Cancel" onPress={closeModal} />
+            </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
   );
 }
 
@@ -266,6 +308,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  businessHours: {
+    marginTop: 16,
+  },
+  hoursTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  hourRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  day: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  time: {
+    fontSize: 16,
+    color: '#666',
+  },
+  businessImages: {
+    marginTop: 16,
+  },
+  imagesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  imageContainer: {
+    marginBottom: 15,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    marginRight: 8,
+  },
   servicesList: {
     padding: 16,
   },
@@ -275,7 +354,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
     elevation: 2,
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   },
   serviceName: {
     fontSize: 18,
@@ -312,11 +390,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  timeSelector: {
-    padding: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 4,
-    marginBottom: 10,
+  errorText: {
+    fontSize: 16,
+    color: 'red',
     textAlign: 'center',
+  },
+  scrollView: {
+    maxHeight: 300,
+  },
+  slotContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  slotTextContainer: {
+    flex: 1,
+    marginRight: 10,
   },
 });

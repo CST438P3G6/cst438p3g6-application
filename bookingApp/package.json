@@ -18,7 +18,7 @@
     "@expo/vector-icons": "^14.0.2",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/datetimepicker": "^8.2.0",
-    "@react-native-picker/picker": "^2.9.0",
+    "@react-native-picker/picker": "^2.10.2",
     "@react-navigation/bottom-tabs": "7",
     "@react-navigation/native": "7",
     "@supabase/supabase-js": "^2.46.0",
@@ -34,6 +34,7 @@
     "expo-web-browser": "~14.0.1",
     "lucide-react-native": "^0.454.0",
     "react": "18.3.1",
+    "react-datepicker": "^7.5.0",
     "react-dom": "18.3.1",
     "react-hook-form": "^7.53.1",
     "react-native": "0.76.3",
@@ -44,7 +45,9 @@
     "react-native-screens": "^4.0.0",
     "react-native-toast-message": "^2.2.1",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-web": "~0.19.10"
+    "react-native-web": "~0.19.10",
+    "react-time-range": "^1.0.4",
+    "react-time-range-picker": "^1.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

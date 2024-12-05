@@ -33,6 +33,7 @@ export function useCreateBusiness() {
         const { data, error } = await supabase
             .from('business')
             .insert([businessWithUserId])
+            .select()
             .single();
 
         if (error) {
@@ -42,7 +43,7 @@ export function useCreateBusiness() {
         }
 
         setLoading(false);
-        return { data: data as Business, error: null };
+        return { data: data as unknown as Business, error: null };
     };
 
     return { createBusiness, loading, error };
