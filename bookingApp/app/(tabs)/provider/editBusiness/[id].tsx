@@ -462,9 +462,16 @@ export default function EditBusinessPage() {
           data={images.concat(newImages)}
           keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
           renderItem={({ item }) => (
-              <View style={styles.imageContainer}>
-                <Image source={{ uri: item.image_url || item }} style={styles.image} resizeMode="contain" />
-              </View>
+              <TouchableOpacity onPress={() => toggleImageSelection(item.id)}>
+                <View
+                    style={[
+                      styles.imageContainer,
+                      selectedImages.includes(item.id) && styles.selectedImageContainer,
+                    ]}
+                >
+                  <Image source={{ uri: item.image_url || item }} style={styles.image} resizeMode="contain" />
+                </View>
+              </TouchableOpacity>
           )}
           ListFooterComponent={
             <View>
