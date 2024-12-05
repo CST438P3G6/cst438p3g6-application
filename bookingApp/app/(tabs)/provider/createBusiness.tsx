@@ -216,8 +216,7 @@ export default function CreateBusiness() {
 
   return (
       <ScrollView contentContainerStyle={{ ...styles.container, overflow: 'visible' }}>
-
-      <Text style={styles.title}>Create Business</Text>
+        <Text style={styles.title}>Create Business</Text>
         <TextInput
             style={styles.input}
             placeholder="Name"
@@ -283,10 +282,10 @@ export default function CreateBusiness() {
                     />
                 )}
               </View>
-              <View style={styles.timeRow}>
+              <View style={[styles.timeRow, { zIndex: 1001 }]}>
                 <Text style={styles.timeLabel}>Close:</Text>
                 {Platform.OS === 'web' ? (
-                    <View style={styles.dropdownContainer}>
+                    <View style={[styles.dropdownContainer, { zIndex: 1001 }]}>
                       <DatePicker
                           selected={new Date(`1970-01-01T${hour.close_time}:00`)}
                           onChange={(date) => handleTimeChange(index, 'close_time', date as Date)}
@@ -295,6 +294,7 @@ export default function CreateBusiness() {
                           timeIntervals={15}
                           timeCaption="Time"
                           dateFormat="h:mm aa"
+                          portalId="root-portal"
                       />
                     </View>
                 ) : (
