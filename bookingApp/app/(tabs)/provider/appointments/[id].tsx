@@ -20,7 +20,11 @@ export default function AppointmentView() {
   const [localAppointments, setLocalAppointments] = useState(appointments);
 
   useEffect(() => {
-    setLocalAppointments(appointments);
+    const sortedAppointments = [...appointments].sort(
+      (a, b) =>
+        new Date(b.start_time).getTime() - new Date(a.start_time).getTime(),
+    );
+    setLocalAppointments(sortedAppointments);
   }, [appointments]);
 
   const updateStatus = async (appointmentId: number, status: string) => {
@@ -75,7 +79,6 @@ export default function AppointmentView() {
         renderItem={({item}) => (
           <View style={styles.appointmentCard}>
             <View style={styles.appointmentHeader}>
-              <Text style={styles.appointmentId}>Appointment #{item.id}</Text>
               <Text style={styles.dateText}>
                 {new Date(item.start_time).toLocaleDateString()}
               </Text>
@@ -88,32 +91,47 @@ export default function AppointmentView() {
               <Text>End: {new Date(item.end_time).toLocaleTimeString()}</Text>
             </View>
 
+            <View style={styles.appointmentDetails}>
+              <Text>
+                Name:{' '}
+                {item.user
+                  ? `${item.user.first_name} ${item.user.last_name}`
+                  : 'Unknown name'}
+              </Text>
+              <Text>
+                Service: {item.service ? item.service.name : 'Unknown Service'}
+              </Text>
+            </View>
+
             <View style={styles.statusContainer}>
-              {[
-                'pending',
-                'confirmed',
-                'completed',
-                'cancelled',
-                'rescheduled',
-              ].map((status) => (
-                <TouchableOpacity
-                  key={status}
-                  style={[
-                    styles.statusButton,
-                    item.status === status && styles.activeStatusButton,
-                  ]}
-                  onPress={() => updateStatus(item.id, status)}
-                >
-                  <Text
+              {['pending', 'confirmed', 'completed', 'cancelled'].map(
+                (status) => (
+                  <TouchableOpacity
+                    key={`${item.id}-${status}`}
                     style={[
-                      styles.statusText,
-                      item.status === status && styles.activeStatusText,
+                      styles.statusButton,
+                      item.status === status && styles.activeStatusButton,
                     ]}
+                    onPress={async () => {
+                      await updateStatus(item.id, status);
+                      setLocalAppointments((prevAppointments) =>
+                        prevAppointments.map((appt) =>
+                          appt.id === item.id ? {...appt, status} : appt,
+                        ),
+                      );
+                    }}
                   >
-                    {status}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.statusText,
+                        item.status === status && styles.activeStatusText,
+                      ]}
+                    >
+                      {status}
+                    </Text>
+                  </TouchableOpacity>
+                ),
+              )}
             </View>
           </View>
         )}
@@ -148,6 +166,9 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   timeContainer: {
+    marginBottom: 12,
+  },
+  appointmentDetails: {
     marginBottom: 12,
   },
   statusContainer: {
