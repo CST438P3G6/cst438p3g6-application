@@ -53,43 +53,51 @@ export default function SignUpPage() {
 
     setLoading(true);
     try {
-      const {error} = await supabase.auth.signUp({
+      const {
+        data: {user},
+        error: signUpError,
+      } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             first_name: firstName,
             last_name: lastName,
-            phone_number: phoneNumber,
-            is_admin: isAdmin,
-            is_provider: isProvider,
           },
         },
       });
 
-      if (error) {
-        Toast.show({
-          type: 'error',
-          text1: 'Sign Up Error',
-          text2: error.message,
-          position: 'bottom',
-          visibilityTime: 1000,
-        });
-      } else {
-        Toast.show({
-          type: 'success',
-          text1: 'Success',
-          text2: 'Account created successfully! Please check your email.',
-          position: 'bottom',
-          visibilityTime: 1000,
-        });
-        router.replace('/(auth)/loginPage');
-      }
+      if (signUpError) throw signUpError;
+      if (!user) throw new Error('User creation failed');
+
+      const {error: profileError} = await supabase
+          .from('profiles')
+          .update({
+            first_name: firstName,
+            last_name: lastName,
+            phone_number: phoneNumber,
+            isadmin: isAdmin,
+            isprovider: isProvider,
+            is_active: true,
+          })
+          .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Account created successfully! Please check your email to verify your account.',
+        position: 'bottom',
+        visibilityTime: 1000,
+        onHide: () => router.push('/(auth)/loginPage'),
+      });
     } catch (error) {
+      console.error('SignUp error:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'An unexpected error occurred',
+        text2: (error as Error).message,
         position: 'bottom',
         visibilityTime: 1000,
       });
@@ -99,113 +107,113 @@ export default function SignUpPage() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.header}>
-          <UserPlus size={32} color="#000" style={styles.headerIcon} />
-          <Text style={styles.title}>Sign Up</Text>
-          <Text style={styles.description}>Create your account</Text>
-        </View>
+      <View style={styles.container}>
+        <View style={styles.card}>
+          <View style={styles.header}>
+            <UserPlus size={32} color="#000" style={styles.headerIcon} />
+            <Text style={styles.title}>Sign Up</Text>
+            <Text style={styles.description}>Create your account</Text>
+          </View>
 
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <Mail size={20} color="#666" />
-            <TextInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              style={styles.input}
-              keyboardType="email-address"
-              autoCapitalize="none"
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Mail size={20} color="#666" />
+              <TextInput
+                  placeholder="Email"
+                  value={email}
+                  onChangeText={setEmail}
+                  style={styles.input}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <Lock size={20} color="#666" />
+              <TextInput
+                  placeholder="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  style={styles.input}
+                  secureTextEntry
+              />
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <User size={20} color="#666" />
+              <TextInput
+                  placeholder="First Name"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  style={styles.input}
+              />
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <User size={20} color="#666" />
+              <TextInput
+                  placeholder="Last Name"
+                  value={lastName}
+                  onChangeText={setLastName}
+                  style={styles.input}
+              />
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <Phone size={20} color="#666" />
+              <TextInput
+                  placeholder="Phone Number"
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  style={styles.input}
+                  keyboardType="phone-pad"
+              />
+            </View>
+          </View>
+
+          <View style={styles.toggleContainer}>
+            <Text style={styles.label}>Admin Access</Text>
+            <Switch
+                value={isAdmin}
+                onValueChange={setIsAdmin}
+                trackColor={{false: '#767577', true: '#81b0ff'}}
             />
           </View>
 
-          <View style={styles.inputWrapper}>
-            <Lock size={20} color="#666" />
-            <TextInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              style={styles.input}
-              secureTextEntry
+          <View style={styles.toggleContainer}>
+            <Text style={styles.label}>Provider Access</Text>
+            <Switch
+                value={isProvider}
+                onValueChange={setIsProvider}
+                trackColor={{false: '#767577', true: '#81b0ff'}}
             />
           </View>
 
-          <View style={styles.inputWrapper}>
-            <User size={20} color="#666" />
-            <TextInput
-              placeholder="First Name"
-              value={firstName}
-              onChangeText={setFirstName}
-              style={styles.input}
-            />
+          <View style={styles.footer}>
+            <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={signUpWithEmail}
+                disabled={loading}
+            >
+              {loading ? (
+                  <ActivityIndicator color="#fff" />
+              ) : (
+                  <Text style={styles.buttonText}>Sign Up</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.linkButton}
+                onPress={() => router.push('/(auth)/loginPage')}
+                disabled={loading}
+            >
+              <Text style={styles.linkText}>
+                Already have an account? Sign In
+              </Text>
+            </TouchableOpacity>
           </View>
-
-          <View style={styles.inputWrapper}>
-            <User size={20} color="#666" />
-            <TextInput
-              placeholder="Last Name"
-              value={lastName}
-              onChangeText={setLastName}
-              style={styles.input}
-            />
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <Phone size={20} color="#666" />
-            <TextInput
-              placeholder="Phone Number"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              style={styles.input}
-              keyboardType="phone-pad"
-            />
-          </View>
-        </View>
-
-        <View style={styles.toggleContainer}>
-          <Text style={styles.label}>Admin Access</Text>
-          <Switch
-            value={isAdmin}
-            onValueChange={setIsAdmin}
-            trackColor={{false: '#767577', true: '#81b0ff'}}
-          />
-        </View>
-
-        <View style={styles.toggleContainer}>
-          <Text style={styles.label}>Provider Access</Text>
-          <Switch
-            value={isProvider}
-            onValueChange={setIsProvider}
-            trackColor={{false: '#767577', true: '#81b0ff'}}
-          />
-        </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={signUpWithEmail}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign Up</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => router.push('/(auth)/loginPage')}
-            disabled={loading}
-          >
-            <Text style={styles.linkText}>
-              Already have an account? Sign In
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
-    </View>
   );
 }
 
