@@ -6,19 +6,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import toast from 'react-native-toast-message';
 import {supabase} from '@/utils/supabase';
-import {
-  Mail,
-  Lock,
-  User,
-  Phone,
-  Shield,
-  UserCog,
-  LogIn,
-} from 'lucide-react-native';
+import {Mail, Lock, LogIn} from 'lucide-react-native';
+import Logo from '@/components/common/logo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -62,75 +58,87 @@ export default function LoginPage() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Login</Text>
-          <Text style={styles.description}>Sign in to your account.</Text>
-        </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.select({ios: 20, android: 20, web: 0})}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Logo />
+        <View style={styles.card}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Login</Text>
+            <Text style={styles.description}>Sign in to your account.</Text>
+          </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Email</Text>
-          <View style={styles.inputWrapper}>
-            <Mail size={20} color="#666" />
-            <TextInput
-              style={[styles.input, styles.inputWithIcon]}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email</Text>
+            <View style={styles.inputWrapper}>
+              <Mail size={20} color="#666" />
+              <TextInput
+                style={[styles.input, styles.inputWithIcon]}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.inputWrapper}>
+              <Lock size={20} color="#666" />
+              <TextInput
+                style={[styles.input, styles.inputWithIcon]}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Enter your password"
+                secureTextEntry
+              />
+            </View>
+          </View>
+
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={signInWithEmail}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Sign In</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.linkButton}
+              onPress={() => router.push('/(auth)/signupPage')}
+              disabled={loading}
+            >
+              <LogIn size={16} color="#007AFF" style={styles.linkIcon} />
+              <Text style={styles.linkText}>
+                Don't have an account? Sign Up
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputWrapper}>
-            <Lock size={20} color="#666" />
-            <TextInput
-              style={[styles.input, styles.inputWithIcon]}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter your password"
-              secureTextEntry
-            />
-          </View>
-        </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={signInWithEmail}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => router.push('/(auth)/signupPage')}
-            disabled={loading}
-          >
-            <LogIn size={16} color="#007AFF" style={styles.linkIcon} />
-            <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#f5f5f5',
   },
   card: {
     backgroundColor: '#ffffff',

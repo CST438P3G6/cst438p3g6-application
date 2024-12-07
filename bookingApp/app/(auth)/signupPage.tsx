@@ -7,11 +7,15 @@ import {
   StyleSheet,
   ActivityIndicator,
   Switch,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import {supabase} from '@/utils/supabase';
 import Toast from 'react-native-toast-message';
 import {UserPlus, Mail, Lock, User, Phone} from 'lucide-react-native';
+import Logo from '@/components/common/logo';
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
@@ -71,23 +75,24 @@ export default function SignUpPage() {
       if (!user) throw new Error('User creation failed');
 
       const {error: profileError} = await supabase
-          .from('profiles')
-          .update({
-            first_name: firstName,
-            last_name: lastName,
-            phone_number: phoneNumber,
-            isadmin: isAdmin,
-            isprovider: isProvider,
-            is_active: true,
-          })
-          .eq('id', user.id);
+        .from('profiles')
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          phone_number: phoneNumber,
+          isadmin: isAdmin,
+          isprovider: isProvider,
+          is_active: true,
+        })
+        .eq('id', user.id);
 
       if (profileError) throw profileError;
 
       Toast.show({
         type: 'success',
         text1: 'Success',
-        text2: 'Account created successfully! Please check your email to verify your account.',
+        text2:
+          'Account created successfully! Please check your email to verify your account.',
         position: 'bottom',
         visibilityTime: 1000,
         onHide: () => router.push('/(auth)/loginPage'),
@@ -107,8 +112,14 @@ export default function SignUpPage() {
   };
 
   return (
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.select({ios: 20, android: 20, web: 0})}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.card}>
+          <Logo />
           <View style={styles.header}>
             <UserPlus size={32} color="#000" style={styles.headerIcon} />
             <Text style={styles.title}>Sign Up</Text>
@@ -119,54 +130,54 @@ export default function SignUpPage() {
             <View style={styles.inputWrapper}>
               <Mail size={20} color="#666" />
               <TextInput
-                  placeholder="Email"
-                  value={email}
-                  onChangeText={setEmail}
-                  style={styles.input}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                style={styles.input}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
             </View>
 
             <View style={styles.inputWrapper}>
               <Lock size={20} color="#666" />
               <TextInput
-                  placeholder="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  style={styles.input}
-                  secureTextEntry
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                style={styles.input}
+                secureTextEntry
               />
             </View>
 
             <View style={styles.inputWrapper}>
               <User size={20} color="#666" />
               <TextInput
-                  placeholder="First Name"
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  style={styles.input}
+                placeholder="First Name"
+                value={firstName}
+                onChangeText={setFirstName}
+                style={styles.input}
               />
             </View>
 
             <View style={styles.inputWrapper}>
               <User size={20} color="#666" />
               <TextInput
-                  placeholder="Last Name"
-                  value={lastName}
-                  onChangeText={setLastName}
-                  style={styles.input}
+                placeholder="Last Name"
+                value={lastName}
+                onChangeText={setLastName}
+                style={styles.input}
               />
             </View>
 
             <View style={styles.inputWrapper}>
               <Phone size={20} color="#666" />
               <TextInput
-                  placeholder="Phone Number"
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  style={styles.input}
-                  keyboardType="phone-pad"
+                placeholder="Phone Number"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                style={styles.input}
+                keyboardType="phone-pad"
               />
             </View>
           </View>
@@ -174,38 +185,38 @@ export default function SignUpPage() {
           <View style={styles.toggleContainer}>
             <Text style={styles.label}>Admin Access</Text>
             <Switch
-                value={isAdmin}
-                onValueChange={setIsAdmin}
-                trackColor={{false: '#767577', true: '#81b0ff'}}
+              value={isAdmin}
+              onValueChange={setIsAdmin}
+              trackColor={{false: '#767577', true: '#81b0ff'}}
             />
           </View>
 
           <View style={styles.toggleContainer}>
             <Text style={styles.label}>Provider Access</Text>
             <Switch
-                value={isProvider}
-                onValueChange={setIsProvider}
-                trackColor={{false: '#767577', true: '#81b0ff'}}
+              value={isProvider}
+              onValueChange={setIsProvider}
+              trackColor={{false: '#767577', true: '#81b0ff'}}
             />
           </View>
 
           <View style={styles.footer}>
             <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
-                onPress={signUpWithEmail}
-                disabled={loading}
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={signUpWithEmail}
+              disabled={loading}
             >
               {loading ? (
-                  <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#fff" />
               ) : (
-                  <Text style={styles.buttonText}>Sign Up</Text>
+                <Text style={styles.buttonText}>Sign Up</Text>
               )}
             </TouchableOpacity>
 
             <TouchableOpacity
-                style={styles.linkButton}
-                onPress={() => router.push('/(auth)/loginPage')}
-                disabled={loading}
+              style={styles.linkButton}
+              onPress={() => router.push('/(auth)/loginPage')}
+              disabled={loading}
             >
               <Text style={styles.linkText}>
                 Already have an account? Sign In
@@ -213,22 +224,25 @@ export default function SignUpPage() {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#f5f5f5',
   },
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
-    elevation: 3,
   },
   header: {
     marginBottom: 24,
