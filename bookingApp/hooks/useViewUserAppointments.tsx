@@ -10,6 +10,7 @@ type Appointment = {
   user_id: string;
   cost: number;
   service_name: string;
+  business_name: string;
 };
 
 export function useViewUserAppointments(userId: string) {
@@ -25,16 +26,19 @@ export function useViewUserAppointments(userId: string) {
       setError(null);
 
       const {data, error} = await supabase
-        .from('appointment')
-        .select(
-          `
+          .from('appointment')
+          .select(
+              `
           *,
           service:service_id (
-            name
+            name,
+            business:business_id (
+              name
+            )
           )
         `,
-        )
-        .eq('user_id', userId);
+          )
+          .eq('user_id', userId);
 
       if (error) {
         setError(error.message);
@@ -43,6 +47,7 @@ export function useViewUserAppointments(userId: string) {
         const transformedData = data.map((appointment: any) => ({
           ...appointment,
           service_name: appointment.service.name,
+          business_name: appointment.service.business.name,
         }));
         setAppointments(transformedData as Appointment[]);
       }
@@ -54,15 +59,15 @@ export function useViewUserAppointments(userId: string) {
       fetchAppointments();
 
       subscription = supabase
-        .channel('public:appointment')
-        .on(
-          'postgres_changes',
-          {event: '*', schema: 'public', table: 'appointment'},
-          (payload) => {
-            fetchAppointments();
-          },
-        )
-        .subscribe();
+          .channel('public:appointment')
+          .on(
+              'postgres_changes',
+              {event: '*', schema: 'public', table: 'appointment'},
+              () => {
+                fetchAppointments();
+              },
+          )
+          .subscribe();
     }
 
     return () => {

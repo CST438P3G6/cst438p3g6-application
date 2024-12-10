@@ -47,9 +47,14 @@ type Service = {
   time_needed: string;
 };
 
+type AvailableTimeSlot = {
+  slot_start: string;
+  slot_end: string;
+};
+
 export default function BusinessScreen() {
   const { id } = useLocalSearchParams();
-  const businessId = Array.isArray(id) ? id[0] : id;
+  const businessId = Array.isArray(id) ? parseInt(id[0], 10) : parseInt(id, 10);
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,15 +64,15 @@ export default function BusinessScreen() {
   const { user } = useUser();
   const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  const { businessHours, loading: hoursLoading, error: hoursError } = useViewBusinessHours(businessId as string);
-  const { images, loading: imagesLoading, error: imagesError } = useViewBusinessImages(businessId as string);
+  const { businessHours, loading: hoursLoading, error: hoursError } = useViewBusinessHours(businessId.toString());
+  const { images, loading: imagesLoading, error: imagesError } = useViewBusinessImages(businessId.toString());
 
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const { availableTimeSlots, loading: slotsLoading, error: slotsError } = useAvailableTimeSlots(
-      businessId as number,
+      businessId,
       selectedDate?.toISOString() || '',
       selectedDate?.toISOString() || '',
       selectedService ? parseInt(selectedService.time_needed.split(':')[1], 10) : 0,
@@ -85,8 +90,8 @@ export default function BusinessScreen() {
         if (businessResponse.error) throw businessResponse.error;
         if (servicesResponse.error) throw servicesResponse.error;
 
-        setBusiness(businessResponse.data);
-        setServices(servicesResponse.data || []);
+        setBusiness(businessResponse.data as Business);
+        setServices(servicesResponse.data as Service[] || []);
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch data');
         console.error(error);
@@ -266,7 +271,11 @@ export default function BusinessScreen() {
                         {businessHours.map((hour, index) => (
                             <View key={index} style={styles.hourRow}>
                               <Text style={styles.day}>{hour.day}</Text>
-                              <Text style={styles.time}>{formatBusinessHours(hour.open_time)} - {formatBusinessHours(hour.close_time)}</Text>
+                              {hour.open_time === '00:00:00' && hour.close_time === '00:00:00' ? (
+                                  <Text style={styles.time}>CLOSED</Text>
+                              ) : (
+                                  <Text style={styles.time}>{formatBusinessHours(hour.open_time)} - {formatBusinessHours(hour.close_time)}</Text>
+                              )}
                             </View>
                         ))}
                       </View>
@@ -285,7 +294,6 @@ export default function BusinessScreen() {
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Select a Date</Text>
               {renderDateSelector()}
-              <Button title="View Available Appointments" onPress={() => {}} disabled={slotsLoading} />
               <Button title="Cancel" onPress={closeModal} />
               {slotsLoading && <ActivityIndicator size="large" color="#0000ff" />}
               <FlatList
@@ -294,9 +302,9 @@ export default function BusinessScreen() {
                   renderItem={({ item }) => (
                       <View style={styles.slotContainer}>
                         <View style={styles.slotTextContainer}>
-                          <Text>{formatTime(item.start_time)} - {formatTime(item.end_time)}</Text>
+                          <Text>{formatTime(item.slot_start)} - {formatTime(item.slot_end)}</Text>
                         </View>
-                        <Button title="Book" onPress={() => handleBookAppointment(item.start_time, item.end_time)} />
+                        <Button title="Book" onPress={() => handleBookAppointment(item.slot_start, item.slot_end)} />
                       </View>
                   )}
                   style={{ maxHeight: 300 }}
