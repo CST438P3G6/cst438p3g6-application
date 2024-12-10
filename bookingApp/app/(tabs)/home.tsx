@@ -30,17 +30,14 @@ export default function Home() {
       )
     : [];
 
-  const renderBusinessCard = ({item}) => (
-    <Pressable
-      onPress={() => router.push(`/business/${item.id}`)}
-      style={{
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-      }}
-    >
-      <Text>{item.name}</Text>
-    </Pressable>
+  const renderBusinessCard = ({ item }) => (
+      <Pressable
+          onPress={() => router.push(`/business/${item.id}`)}
+          style={cardStyles.card}
+      >
+        <Text style={styles.cardTitle}>{item.name}</Text>
+        <Text style={styles.cardAddress}>{item.address}</Text>
+      </Pressable>
   );
 
   if (loading) {
@@ -95,21 +92,26 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 24,
   },
-  row: {
-    width: '100%',
-    marginBottom: 12,
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  cardAddress: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 
 const cardStyles = StyleSheet.create({
   card: {
-    width: width - 32, // Full width minus padding
+    width: width - 32,
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
     marginVertical: 8,
-    // Improved shadow
+
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -118,7 +120,7 @@ const cardStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    // Inner layout
+
     flexDirection: 'column',
     gap: 8,
   },
