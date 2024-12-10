@@ -63,7 +63,16 @@ export function useViewBusinessAppointments(businessId: number) {
           )
         `,
         )
-        .filter('service.business_id', 'eq', businessId);
+        .in(
+          'service_id',
+          await (async () => {
+            const {data} = await supabase
+              .from('service')
+              .select('id')
+              .eq('business_id', businessId);
+            return data?.map((row) => row.id) || [];
+          })(),
+        );
 
       if (error) {
         setError(error.message);
