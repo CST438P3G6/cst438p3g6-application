@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TextInput, Image, ScrollView } from 'react-native';
+import { View, Text, Button, StyleSheet, ActivityIndicator, Alert, TextInput, Image, ScrollView, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useAddReviewImages } from '@/hooks/useAddReviewImages';
-import { Button } from '@/components/ui/button';
+import { useAddBusinessImages } from '@/hooks/useAddBusinessImages';
 
-export default function AddReviewImagesPage() {
+export default function AddBusinessImagesPage() {
     const [images, setImages] = useState<string[]>([]);
-    const [reviewId, setReviewId] = useState<string>('');
-    const { uploadImages, loading, error } = useAddReviewImages();
+    const [businessId, setBusinessId] = useState<string>('');
+    const { uploadImages, loading, error } = useAddBusinessImages();
 
     const pickImages = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -24,26 +23,35 @@ export default function AddReviewImagesPage() {
     };
 
     const handleUpload = async () => {
-        if (images.length === 0 || !reviewId) {
-            Alert.alert('Error', 'Please select images and enter a review ID.');
+        if (images.length === 0 || !businessId) {
+            Alert.alert('Error', 'Please select images and enter a business ID.');
             return;
         }
 
         try {
-            const files = await Promise.all(images.map(async (image) => {
-                const response = await fetch(image);
-                const blob = await response.blob();
-                return new File([blob], `review_${reviewId}_${Date.now()}.jpg`, { type: 'image/jpeg' });
-            }));
+            let files;
+            if (Platform.OS === 'web') {
+                files = await Promise.all(images.map(async (image, index) => {
+                    const response = await fetch(image);
+                    const blob = await response.blob();
+                    return new File([blob], `business_${businessId}_${Date.now()}_${index}.jpg`, { type: 'image/jpeg' });
+                }));
+            } else {
+                files = images.map((image, index) => ({
+                    uri: image,
+                    name: `business_${businessId}_${Date.now()}_${index}.jpg`,
+                    type: 'image/jpeg',
+                }));
+            }
 
-            const result = await uploadImages(files, parseInt(reviewId));
+            const result = await uploadImages(files, parseInt(businessId));
 
             if (result.error) {
                 Alert.alert('Error uploading images', result.error);
             } else {
                 Alert.alert('Success', 'Images uploaded successfully');
                 setImages([]);
-                setReviewId('');
+                setBusinessId('');
             }
         } catch (uploadError) {
             console.error('Upload error:', uploadError);
@@ -53,15 +61,16 @@ export default function AddReviewImagesPage() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Add Review Images</Text>
+            <Text style={styles.title}>Add Business Images</Text>
             <TextInput
                 style={styles.input}
-                value={reviewId}
-                onChangeText={setReviewId}
-                placeholder="Enter Review ID"
+                value={businessId}
+                onChangeText={setBusinessId}
+                placeholder="Enter Business ID"
                 keyboardType="numeric"
             />
-            <Button onPress={pickImages}>Pick images from camera roll</Button>            <ScrollView horizontal style={styles.imagePreview}>
+            <Button title="Pick images from camera roll" onPress={pickImages} />
+            <ScrollView horizontal style={styles.imagePreview}>
                 {images.map((image, index) => (
                     <View key={index} style={styles.imageContainer}>
                         <Image source={{ uri: image }} style={styles.image} />
@@ -69,7 +78,7 @@ export default function AddReviewImagesPage() {
                     </View>
                 ))}
             </ScrollView>
-            <Button onPress={handleUpload} disabled={loading} >Upload Images</Button>
+            <Button title="Upload Images" onPress={handleUpload} disabled={loading} />
             {loading && <ActivityIndicator size="large" color="#0000ff" />}
             {error && <Text style={styles.errorText}>{error}</Text>}
         </View>

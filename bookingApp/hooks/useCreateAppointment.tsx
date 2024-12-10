@@ -23,7 +23,7 @@ export function useCreateAppointment() {
         setLoading(true);
         setError(null);
 
-
+        // Fetch service details
         const { data: service, error: serviceError } = await supabase
             .from('service')
             .select('cost, time_needed')
@@ -32,28 +32,36 @@ export function useCreateAppointment() {
 
         if (serviceError) return handleError(serviceError.message);
 
-        const { cost, time_needed } = service as unknown as { cost: number; time_needed: string };
+        const { cost, time_needed } = service as { cost: number; time_needed: string };
 
+        // Parse duration
         const durationMs = parseInterval(time_needed);
-        const startDate = new Date(startTime);
+
+        // Parse start time as UTC
+        const startDate = new Date(startTime + 'Z');
         if (isNaN(startDate.getTime())) return handleError('Invalid start time format');
 
+        // Calculate end time
         const endTime = new Date(startDate.getTime() + durationMs).toISOString();
 
-
+        // Insert appointment
         const { data, error } = await supabase
             .from('appointment')
-            .insert({ service_id: serviceId, start_time: startTime, end_time: endTime, status: 'pending', user_id: userId, cost })
+            .insert({
+                service_id: serviceId,
+                start_time: startDate.toISOString(),
+                end_time: endTime,
+                status: 'pending',
+                user_id: userId,
+                cost,
+            })
             .select()
             .single();
 
-        console.log('Insert response:', { data, error });
-
         if (error) return handleError(error.message);
 
-
         setLoading(false);
-        return { data: data as unknown as Appointment, error: null };
+        return { data: data as Appointment, error: null };
     };
 
     const handleError = (message: string) => {
@@ -65,11 +73,14 @@ export function useCreateAppointment() {
     return { createAppointment, loading, error };
 }
 
-// Helper function to parse 'HH:MM:SS' format into milliseconds
+// Helper function to parse 'HH:MM:SS' or 'HH:MM' format into milliseconds
 function parseInterval(interval: string): number {
-    const [hours = '0', minutes, seconds] = interval.split(':').map(Number);
-    // @ts-ignore
-    if ([hours, minutes, seconds].some(isNaN)) throw new Error("Invalid interval format. Expected 'HH:MM:SS'");
-
-    return ((+hours * 60 + +minutes) * 60 + +seconds) * 1000;
+    const parts = interval.split(':').map(Number);
+    if (parts.some(isNaN)) throw new Error("Invalid interval format. Expected 'HH:MM' or 'HH:MM:SS'");
+    let [hours = 0, minutes = 0, seconds = 0] = parts;
+    if (parts.length === 2) {
+        [hours, minutes] = parts;
+        seconds = 0;
+    }
+    return ((hours * 60 + minutes) * 60 + seconds) * 1000;
 }

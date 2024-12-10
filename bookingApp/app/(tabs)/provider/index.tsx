@@ -1,18 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  TouchableOpacity,
-  Alert,
-  FlatList,
-  Text,
-  RefreshControl,
-} from 'react-native';
+import {View, TouchableOpacity, FlatList, Text} from 'react-native';
 import {useRouter} from 'expo-router';
 import {Plus, Eye, Trash2, Settings} from 'lucide-react-native';
 import {useUserBusinesses} from '@/hooks/useUserBusiness';
 import {supabase} from '@/utils/supabase';
 import {useUser} from '@/context/UserContext';
 import Toast from 'react-native-toast-message';
+import {useDisownBusiness} from '@/hooks/useDisownBusiness';
 
 interface Business {
   id: string;
@@ -31,38 +25,27 @@ export default function ProviderDashboard() {
   const {businesses, loading, error, refetch} = useUserBusinesses(
     profile?.id || null,
   );
-  const [refreshing, setRefreshing] = useState(false);
+  const [businessList, setBusinessList] = useState<Business[]>([]);
+  const {disownBusiness} = useDisownBusiness();
 
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  }, [refetch]);
+  useEffect(() => {
+    setBusinessList(businesses);
+  }, [businesses]);
 
   const handleDeleteBusiness = async (businessId: string) => {
     try {
-      const {error} = await supabase
-        .from('business')
-        .delete()
-        .eq('id', businessId);
-
-      if (error) throw error;
+      await disownBusiness(Number(businessId));
       Toast.show({
         type: 'success',
         text1: 'Success',
         text2: 'Business deleted successfully',
-        position: 'bottom',
-        visibilityTime: 1000,
       });
     } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Error',
         text2: 'Failed to delete business',
-        position: 'bottom',
-        visibilityTime: 1000,
       });
-      console.error(error);
     }
   };
 
@@ -72,13 +55,24 @@ export default function ProviderDashboard() {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all changes (insert, update, delete)
+          event: '*',
           schema: 'public',
           table: 'business',
         },
-        async (payload) => {
-          // Refetch data when any change occurs
-          await refetch();
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setBusinessList((prev) => [payload.new as Business, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setBusinessList((prev) =>
+              prev.map((item) =>
+                item.id === payload.new.id ? (payload.new as Business) : item,
+              ),
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setBusinessList((prev) =>
+              prev.filter((item) => item.id !== payload.old.id),
+            );
+          }
         },
       )
       .subscribe();
@@ -87,7 +81,7 @@ export default function ProviderDashboard() {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [refetch]);
+  }, []);
 
   if (loading) {
     return (
@@ -141,6 +135,12 @@ export default function ProviderDashboard() {
         >
           <Text>View Services</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push(`/provider/appointments/${item.id}`)}
+          style={{padding: 8, backgroundColor: '#bae6fd', borderRadius: 20}}
+        >
+          <Text>View Appointments</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -168,10 +168,7 @@ export default function ProviderDashboard() {
       </View>
 
       <FlatList
-        data={businesses}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        data={businessList}
         renderItem={renderBusinessItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{flexGrow: 1}}

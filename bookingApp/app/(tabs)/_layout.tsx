@@ -1,8 +1,7 @@
 import {Tabs} from 'expo-router';
 import {useEffect, useState} from 'react';
 import {supabase} from '@/utils/supabase';
-import {Home, Calendar, Settings, Users} from 'lucide-react-native';
-//TODO import theme from the theme thing
+import {Home, Calendar, Settings, Users, Shield} from 'lucide-react-native';
 
 export default function TabLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -78,6 +77,7 @@ export default function TabLayout() {
       name="admin"
       options={{
         title: 'Admin',
+        tabBarIcon: ({color}) => <Shield size={24} color={color} />,
       }}
       redirect={!isAdmin}
     />,
