@@ -14,11 +14,14 @@ type Appointment = {
   user: {
     id: string;
     name: string;
+    email: string;
+    phone_number: string;
   } | null;
   service: {
     id: number;
     name: string;
     business_id: number;
+    cost: number;
   } | null;
 };
 
@@ -48,12 +51,15 @@ export function useViewBusinessAppointments(businessId: number) {
           user:profiles!appointment_profile_id_fkey (
             id,
             first_name,
-            last_name
+            last_name,
+            email,
+            phone_number
           ),
           service:service_id (
             id,
             name,
-            business_id
+            business_id,
+            cost
           )
         `,
         )

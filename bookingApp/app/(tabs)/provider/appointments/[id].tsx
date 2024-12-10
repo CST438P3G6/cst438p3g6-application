@@ -98,9 +98,16 @@ export default function AppointmentView() {
                   ? `${item.user.first_name} ${item.user.last_name}`
                   : 'Unknown name'}
               </Text>
+              <Text>Email: {item.user ? item.user.email : 'Unknown email'}</Text>
+                <Text>
+                    Phone: {item.user ? item.user.phone_number : 'Unknown phone'}
+                </Text>
               <Text>
                 Service: {item.service ? item.service.name : 'Unknown Service'}
               </Text>
+                <Text>
+                    Cost: {item.cost ? `$${item.cost}` : 'Unknown cost'}
+                </Text>
             </View>
 
             <View style={styles.statusContainer}>
