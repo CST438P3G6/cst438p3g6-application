@@ -11,11 +11,13 @@ import {
   Alert,
   Image,
   Platform,
-  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+  Linking
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import DatePicker from 'react-datepicker'; // Web-specific date picker
-import 'react-datepicker/dist/react-datepicker.css'; // Web-specific styles
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { supabase } from '@/utils/supabase';
 import { useLocalSearchParams } from 'expo-router';
 import { useCreateAppointment } from '@/hooks/useCreateAppointment';
@@ -24,6 +26,9 @@ import Toast from 'react-native-toast-message';
 import { useViewBusinessHours } from '@/hooks/useViewBusinessHours';
 import { useViewBusinessImages } from '@/hooks/useViewBusinessImages';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
+import { Phone, Mail, MapPin } from 'lucide-react-native';
+
+const screenWidth = Dimensions.get('window').width;
 
 type Business = {
   id: number;
@@ -44,7 +49,7 @@ type Service = {
 
 export default function BusinessScreen() {
   const { id } = useLocalSearchParams();
-  const businessId = Array.isArray(id) ? id[0] : id; // Ensure id is a string or number
+  const businessId = Array.isArray(id) ? id[0] : id;
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +61,10 @@ export default function BusinessScreen() {
 
   const { businessHours, loading: hoursLoading, error: hoursError } = useViewBusinessHours(businessId as string);
   const { images, loading: imagesLoading, error: imagesError } = useViewBusinessImages(businessId as string);
+
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const { availableTimeSlots, loading: slotsLoading, error: slotsError } = useAvailableTimeSlots(
       businessId as number,
@@ -88,6 +97,15 @@ export default function BusinessScreen() {
 
     fetchData();
   }, [businessId]);
+
+  useEffect(() => {
+    if (images && images.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [images]);
 
   const openModal = (service: Service) => {
     setSelectedService(service);
@@ -136,11 +154,7 @@ export default function BusinessScreen() {
     if (!selectedService || !user) return;
 
     try {
-      await createAppointment(
-          selectedService.id,
-          user.id,
-          slotStart
-      );
+      await createAppointment(selectedService.id, user.id, slotStart);
       Toast.show({
         type: 'success',
         text1: 'Appointment booked successfully!',
@@ -153,6 +167,28 @@ export default function BusinessScreen() {
       });
       console.error(error);
     }
+  };
+
+  const handleOpenEmail = (email: string) => {
+    Linking.openURL(`mailto:${email}`);
+  };
+
+  const handleOpenPhone = (phoneNumber: string) => {
+    Linking.openURL(`tel:${phoneNumber}`);
+  };
+
+  const handleOpenMaps = (address: string) => {
+    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`);
+  };
+
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setImageModalVisible(true);
+  };
+
+  const closeImageModal = () => {
+    setImageModalVisible(false);
+    setSelectedImage(null);
   };
 
   const renderServiceItem = ({ item }: { item: Service }) => (
@@ -179,61 +215,65 @@ export default function BusinessScreen() {
     );
   }
 
+  const currentImage = images && images.length > 0 ? images[currentImageIndex] : null;
+
   return (
       <SafeAreaView style={styles.container}>
-        {business && (
-            <View style={styles.businessInfo}>
-              <Text style={styles.businessName}>{business.name}</Text>
-              <Text style={styles.businessDescription}>{business.description}</Text>
-              <View style={styles.contactInfo}>
-                <View style={styles.contactRow}>
-                  <Text>{business.phone_number}</Text>
-                </View>
-                <View style={styles.contactRow}>
-                  <Text>{business.email}</Text>
-                </View>
-                <View style={styles.contactRow}>
-                  <Text>{business.address}</Text>
-                </View>
-              </View>
-              <View style={styles.businessHours}>
-                <Text style={styles.hoursTitle}>Business Hours</Text>
-                {businessHours.map((hour, index) => (
-                    <View key={index} style={styles.hourRow}>
-                      <Text style={styles.day}>{hour.day}</Text>
-
-                      {hour.open_time === '00:00:00' && hour.close_time === '00:00:00' ? (
-                          <Text style={styles.time}>Closed</Text>
-                      ) : (
-                          <Text style={styles.time}>
-
-                            {formatBusinessHours(hour.open_time)} - {formatBusinessHours(hour.close_time)}
-                          </Text>
-                      )}
-                    </View>
-                ))}
-              </View>
-              <View style={styles.businessImages}>
-                <Text style={styles.imagesTitle}>Business Images</Text>
-                <FlatList
-                    data={images}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <View style={styles.imageContainer}>
-                          <Image source={{ uri: item.image_url }} style={styles.image} resizeMode="contain" />
-                        </View>
-                    )}
-                    horizontal
-                />
-              </View>
-            </View>
-        )}
         <FlatList
             data={services}
             renderItem={renderServiceItem}
             keyExtractor={(item) => item.id.toString()}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.servicesList}
+            ListHeaderComponent={
+              <>
+                <View style={styles.businessImages}>
+                  {currentImage && (
+                      <TouchableOpacity onPress={() => handleImageClick(currentImage.image_url)}>
+                        <View style={styles.imageContainer}>
+                          <Image source={{ uri: currentImage.image_url }} style={styles.slideshowImage} />
+                        </View>
+                      </TouchableOpacity>
+                  )}
+                </View>
+                {business && (
+                    <View style={styles.businessInfo}>
+                      <Text style={styles.businessName}>{business.name}</Text>
+                      <Text style={styles.businessDescription}>{business.description}</Text>
+                      <View style={styles.contactInfo}>
+                        <Text style={styles.contactTitle}>Contact Information</Text>
+                        <View style={styles.contactRow}>
+                          <Phone size={20} color="#000" />
+                          <TouchableOpacity onPress={() => handleOpenPhone(business.phone_number)}>
+                            <Text style={styles.normalText}>{business.phone_number}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.contactRow}>
+                          <Mail size={20} color="#000" />
+                          <TouchableOpacity onPress={() => handleOpenEmail(business.email)}>
+                            <Text style={styles.normalText}>{business.email}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.contactRow}>
+                          <MapPin size={20} color="#000" />
+                          <TouchableOpacity onPress={() => handleOpenMaps(business.address)}>
+                            <Text style={styles.normalText}>{business.address}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      <View style={styles.businessHours}>
+                        <Text style={styles.hoursTitle}>Business Hours</Text>
+                        {businessHours.map((hour, index) => (
+                            <View key={index} style={styles.hourRow}>
+                              <Text style={styles.day}>{hour.day}</Text>
+                              <Text style={styles.time}>{formatBusinessHours(hour.open_time)} - {formatBusinessHours(hour.close_time)}</Text>
+                            </View>
+                        ))}
+                      </View>
+                    </View>
+                )}
+              </>
+            }
         />
         <Modal
             visible={modalVisible}
@@ -248,27 +288,35 @@ export default function BusinessScreen() {
               <Button title="View Available Appointments" onPress={() => {}} disabled={slotsLoading} />
               <Button title="Cancel" onPress={closeModal} />
               {slotsLoading && <ActivityIndicator size="large" color="#0000ff" />}
-              {slotsError && <Text style={styles.errorText}>{slotsError}</Text>}
               <FlatList
                   data={availableTimeSlots}
                   keyExtractor={(item, index) => index.toString()}
                   renderItem={({ item }) => (
                       <View style={styles.slotContainer}>
                         <View style={styles.slotTextContainer}>
-                          <Text>{formatDate(item.slot_start)}</Text>
-                          <Text>{`${formatTime(item.slot_start)} - ${formatTime(item.slot_end)}`}</Text>
+                          <Text>{formatTime(item.start_time)} - {formatTime(item.end_time)}</Text>
                         </View>
-                        <Button
-                            title="Book"
-                            onPress={() => handleBookAppointment(item.slot_start, item.slot_end)}
-                            disabled={creatingAppointment}
-                        />
+                        <Button title="Book" onPress={() => handleBookAppointment(item.start_time, item.end_time)} />
                       </View>
                   )}
-                  contentContainerStyle={styles.scrollView} // Use this to apply additional styles
-                  style={{ maxHeight: 300 }} // Limit FlatList height if needed
+                  style={{ maxHeight: 300 }}
               />
             </View>
+          </View>
+        </Modal>
+        <Modal
+            visible={imageModalVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={closeImageModal}
+        >
+          <View style={styles.imageModalContainer}>
+            <TouchableOpacity style={styles.closeButton} onPress={closeImageModal}>
+              <Text style={styles.closeButtonText}>X</Text>
+            </TouchableOpacity>
+            {selectedImage && (
+                <Image source={{ uri: selectedImage }} style={styles.fullscreenImage} />
+            )}
           </View>
         </Modal>
       </SafeAreaView>
@@ -284,11 +332,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  scrollViewContent: {
+    paddingBottom: 16,
+  },
   businessInfo: {
     padding: 16,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
+    borderRadius: 8,
+    marginBottom: 16,
   },
   businessName: {
     fontSize: 24,
@@ -303,10 +356,19 @@ const styles = StyleSheet.create({
   contactInfo: {
     gap: 8,
   },
+  contactTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  normalText: {
+    color: '#000',
+    textDecorationLine: 'none',
   },
   businessHours: {
     marginTop: 16,
@@ -331,19 +393,23 @@ const styles = StyleSheet.create({
   },
   businessImages: {
     marginTop: 16,
+    alignItems: 'center',
   },
   imagesTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
+    textAlign: 'center',
   },
   imageContainer: {
-    marginBottom: 15,
+    width: screenWidth * 0.9,
+    height: (screenWidth * 0.9) * (9 / 16),
+    overflow: 'hidden',
+    borderRadius: 8,
   },
-  image: {
-    width: 100,
-    height: 100,
-    marginRight: 8,
+  slideshowImage: {
+    width: '100%',
+    height: '100%',
   },
   servicesList: {
     padding: 16,
@@ -409,5 +475,27 @@ const styles = StyleSheet.create({
   slotTextContainer: {
     flex: 1,
     marginRight: 10,
+  },
+  imageModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    zIndex: 1,
+  },
+  closeButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  fullscreenImage: {
+    width: '100%',
+    height: '80%',
+    resizeMode: 'contain',
   },
 });
