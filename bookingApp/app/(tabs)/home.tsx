@@ -1,148 +1,128 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  Pressable,
   ActivityIndicator,
-  Image,
+  FlatList,
+  Pressable,
+  SafeAreaView,
+  Text,
+  TextInput,
+  View,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
 import {useRouter} from 'expo-router';
-import {supabase} from '@/utils/supabase';
 import {Search} from 'lucide-react-native';
+import {useAllBusinesses} from '@/hooks/useAllBusinesses';
 
-interface Business {
-  id: string;
-  name: string;
-  phone_number: string;
-  image?: string;
-}
+// Get device window dimensions
+const {width} = Dimensions.get('window');
+
+// Calculate number of columns based on screen width
 
 export default function Home() {
   const router = useRouter();
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {businesses, loading, error} = useAllBusinesses();
+  const [searchQuery, setSearchQuery] = React.useState('');
 
-  useEffect(() => {
-    fetchBusinesses();
-  }, []);
+  const filteredBusinesses = businesses
+    ? businesses.filter((business) =>
+        business.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : [];
 
-  const fetchBusinesses = async () => {
-    try {
-      setLoading(true);
-      const {data, error} = await supabase.from('business').select('*');
-      if (error) throw error;
-      setBusinesses(data || []);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredBusinesses = businesses.filter((business) =>
-    business.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const renderBusinessCard = (business: Business) => (
+  const renderBusinessCard = ({item}) => (
     <Pressable
-      key={business.id}
-      style={styles.card}
-      onPress={() => router.push(`/business/${business.id}`)}
+      onPress={() => router.push(`/business/${item.id}`)}
+      style={{
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+      }}
     >
-      {business.image && (
-        <Image source={{uri: business.image}} style={styles.businessImage} />
-      )}
-      <View style={styles.businessInfo}>
-        <Text style={styles.businessName}>{business.name}</Text>
-        <Text style={styles.phoneNumber}>{business.phone_number}</Text>
-      </View>
+      <Text>{item.name}</Text>
     </Pressable>
   );
 
+  if (loading) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <Text>Error: {error}</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Search size={20} color="#666" />
+    <SafeAreaView style={styles.container}>
+      <View style={{padding: 10}}>
         <TextInput
           placeholder="Search businesses..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          style={styles.searchInput}
+          style={{
+            borderWidth: 1,
+            borderColor: '#ccc',
+            padding: 10,
+            borderRadius: 5,
+          }}
         />
       </View>
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : (
-        <ScrollView style={styles.businessList}>
-          {filteredBusinesses.map(renderBusinessCard)}
-        </ScrollView>
-      )}
-    </View>
+      <FlatList
+        data={filteredBusinesses}
+        keyExtractor={(item) => item.id}
+        renderItem={renderBusinessCard}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View style={{height: 12}} />}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
     backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    marginBottom: 16,
   },
-  searchInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 16,
-  },
-  businessList: {
-    flex: 1,
-  },
-  card: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
+  listContainer: {
     padding: 16,
+    paddingBottom: 24,
+  },
+  row: {
+    width: '100%',
     marginBottom: 12,
-    elevation: 6,
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    flexDirection: 'row',
   },
-  businessImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 12,
+});
+
+const cardStyles = StyleSheet.create({
+  card: {
+    width: width - 32, // Full width minus padding
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    // Improved shadow
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    // Inner layout
+    flexDirection: 'column',
+    gap: 8,
   },
-  businessInfo: {
+  cardContent: {
     flex: 1,
-  },
-  businessName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  phoneNumber: {
-    fontSize: 14,
-    color: '#666',
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 20,
   },
 });
