@@ -278,6 +278,7 @@ export default function BusinessScreen() {
         }
       >
         <FlatList
+          refreshcontrol
           data={services}
           renderItem={renderServiceItem}
           keyExtractor={(item) => item.id.toString()}
@@ -295,6 +296,60 @@ export default function BusinessScreen() {
                         source={{uri: currentImage.image_url}}
                         style={styles.slideshowImage}
                       />
+            data={services}
+            renderItem={renderServiceItem}
+            keyExtractor={(item) => item.id.toString()}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.servicesList}
+            ListHeaderComponent={
+              <>
+                <View style={styles.businessImages}>
+                  {currentImage && (
+                      <TouchableOpacity onPress={() => handleImageClick(currentImage.image_url)}>
+                        <View style={styles.imageContainer}>
+                          <Image source={{ uri: currentImage.image_url }} style={styles.slideshowImage} />
+                        </View>
+                      </TouchableOpacity>
+                  )}
+                </View>
+                {business && (
+                    <View style={styles.businessInfo}>
+                      <Text style={styles.businessName}>{business.name}</Text>
+                      <Text style={styles.businessDescription}>{business.description}</Text>
+                      <View style={styles.contactInfo}>
+                        <Text style={styles.contactTitle}>Contact Information</Text>
+                        <View style={styles.contactRow}>
+                          <Phone size={20} color="#000" />
+                          <TouchableOpacity onPress={() => handleOpenPhone(business.phone_number)}>
+                            <Text style={styles.normalText}>{business.phone_number}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.contactRow}>
+                          <Mail size={20} color="#000" />
+                          <TouchableOpacity onPress={() => handleOpenEmail(business.email)}>
+                            <Text style={styles.normalText}>{business.email}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.contactRow}>
+                          <MapPin size={20} color="#000" />
+                          <TouchableOpacity onPress={() => handleOpenMaps(business.address)}>
+                            <Text style={styles.normalText}>{business.address}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      <View style={styles.businessHours}>
+                        <Text style={styles.hoursTitle}>Business Hours</Text>
+                        {businessHours.map((hour, index) => (
+                            <View key={index} style={styles.hourRow}>
+                              <Text style={styles.day}>{hour.day}</Text>
+                              {hour.open_time === '00:00:00' && hour.close_time === '00:00:00' ? (
+                                  <Text style={styles.time}>CLOSED</Text>
+                              ) : (
+                                  <Text style={styles.time}>{formatBusinessHours(hour.open_time)} - {formatBusinessHours(hour.close_time)}</Text>
+                              )}
+                            </View>
+                        ))}
+                      </View>
                     </View>
                   </TouchableOpacity>
                 )}
