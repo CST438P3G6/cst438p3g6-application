@@ -271,7 +271,11 @@ export default function BusinessScreen() {
                         {businessHours.map((hour, index) => (
                             <View key={index} style={styles.hourRow}>
                               <Text style={styles.day}>{hour.day}</Text>
-                              <Text style={styles.time}>{formatBusinessHours(hour.open_time)} - {formatBusinessHours(hour.close_time)}</Text>
+                              {hour.open_time === '00:00:00' && hour.close_time === '00:00:00' ? (
+                                  <Text style={styles.time}>CLOSED</Text>
+                              ) : (
+                                  <Text style={styles.time}>{formatBusinessHours(hour.open_time)} - {formatBusinessHours(hour.close_time)}</Text>
+                              )}
                             </View>
                         ))}
                       </View>
