@@ -161,13 +161,14 @@ export default function AppointmentsPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#E6F7FF', // Updated background color
     padding: 16,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#E6F7FF', // Same as container background
   },
   title: {
     fontSize: 24,
@@ -178,17 +179,16 @@ const styles = StyleSheet.create({
   list: {
     padding: 16,
   },
-  cardContainer: {
-    marginBottom: 16,
-  },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardHeader: {
     marginBottom: 12,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: '#ef4444',
+    backgroundColor: '#ef4444', // Red cancel button
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   toggleButton: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#f3f4f6', // Light gray background
     padding: 8,
     borderRadius: 8,
     marginHorizontal: 16,
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleButtonActive: {
-    backgroundColor: '#dc2626',
+    backgroundColor: '#dc2626', // Red active state
   },
   toggleButtonText: {
     color: '#4b5563',
@@ -284,19 +284,5 @@ const styles = StyleSheet.create({
   },
   toggleButtonTextActive: {
     color: '#ffffff',
-  },
-  statusBadgeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  pending: {
-    backgroundColor: '#f59e0b',
-  },
-  confirmed: {
-    backgroundColor: '#10b981',
-  },
-  cancelled: {
-    backgroundColor: '#6b7280',
   },
 });

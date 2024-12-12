@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,10 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import {useRouter} from 'expo-router';
+import { useRouter } from 'expo-router';
 import toast from 'react-native-toast-message';
-import {supabase} from '@/utils/supabase';
-import {Mail, Lock, LogIn} from 'lucide-react-native';
+import { supabase } from '@/utils/supabase';
+import { Mail, Lock, LogIn } from 'lucide-react-native';
 import Logo from '@/components/common/logo';
 
 export default function LoginPage() {
@@ -25,7 +25,7 @@ export default function LoginPage() {
   const signInWithEmail = async () => {
     setLoading(true);
     try {
-      const {error} = await supabase.auth.signInWithPassword({email, password});
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         toast.show({
           type: 'error',
@@ -61,8 +61,11 @@ export default function LoginPage() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.select({ios: 20, android: 20, web: 0})}
+      keyboardVerticalOffset={Platform.select({ ios: 20, android: 20, web: 0 })}
     >
+      {/* Blue faded backgrounds */}
+      <View style={[styles.gradient, styles.topGradient]} />
+      <View style={[styles.gradient, styles.bottomGradient]} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Logo />
         <View style={styles.card}>
@@ -135,6 +138,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  gradient: {
+    position: 'absolute',
+    width: '100%',
+    height: 200,
+    backgroundColor: 'rgba(0, 122, 255, 0.2)', 
+  },
+  topGradient: {
+    top: 0,
+  },
+  bottomGradient: {
+    bottom: 0,
+  },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -144,6 +159,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   header: {
     marginBottom: 24,
@@ -152,6 +172,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
+    color: '#007AFF', 
   },
   description: {
     fontSize: 16,
@@ -165,12 +186,26 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 8,
   },
-  input: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 12,
+    backgroundColor: '#f9f9f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
+    paddingVertical: 12,
+  },
+  inputWithIcon: {
+    marginLeft: 8,
   },
   footer: {
     marginTop: 24,
@@ -181,6 +216,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   buttonText: {
     color: '#fff',
@@ -196,20 +236,8 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 14,
   },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-  },
-  inputWithIcon: {
-    flex: 1,
-    borderWidth: 0,
-    marginLeft: 8,
-  },
   linkIcon: {
     marginRight: 4,
   },
 });
+

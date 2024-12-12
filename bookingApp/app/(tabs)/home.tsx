@@ -11,13 +11,10 @@ import {
   Dimensions,
 } from 'react-native';
 import {useRouter} from 'expo-router';
-import {Search} from 'lucide-react-native';
 import {useAllBusinesses} from '@/hooks/useAllBusinesses';
 
 // Get device window dimensions
 const {width} = Dimensions.get('window');
-
-// Calculate number of columns based on screen width
 
 export default function Home() {
   const router = useRouter();
@@ -33,45 +30,37 @@ export default function Home() {
   const renderBusinessCard = ({item}) => (
     <Pressable
       onPress={() => router.push(`/business/${item.id}`)}
-      style={{
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-      }}
+      style={[cardStyles.card]}
     >
-      <Text>{item.name}</Text>
+      <Text style={cardStyles.cardText}>{item.name}</Text>
     </Pressable>
   );
 
   if (loading) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" />
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#007AFF" />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text>Error: {error}</Text>
+      <View style={styles.center}>
+        <Text style={styles.errorText}>Error: {error}</Text>
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{padding: 10}}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Find Businesses</Text>
         <TextInput
           placeholder="Search businesses..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          style={{
-            borderWidth: 1,
-            borderColor: '#ccc',
-            padding: 10,
-            borderRadius: 5,
-          }}
+          style={styles.searchInput}
         />
       </View>
       <FlatList
@@ -89,27 +78,52 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#E6F7FF', 
+  },
+  header: {
+    padding: 16,
+    backgroundColor: '#007AFF', 
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#fff',
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: 'white',
+    fontSize: 16,
   },
   listContainer: {
     padding: 16,
     paddingBottom: 24,
   },
-  row: {
-    width: '100%',
-    marginBottom: 12,
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E6F7FF',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
   },
 });
 
 const cardStyles = StyleSheet.create({
   card: {
     width: width - 32, // Full width minus padding
-    backgroundColor: 'white',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
-    marginVertical: 8,
-    // Improved shadow
+    
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -118,11 +132,12 @@ const cardStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    // Inner layout
+    
     flexDirection: 'column',
-    gap: 8,
   },
-  cardContent: {
-    flex: 1,
+  cardText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
 });

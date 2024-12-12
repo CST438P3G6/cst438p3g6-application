@@ -121,14 +121,14 @@ export default function SignUpPage() {
         <View style={styles.card}>
           <Logo />
           <View style={styles.header}>
-            <UserPlus size={32} color="#000" style={styles.headerIcon} />
+            <UserPlus size={32} color="#1E90FF" style={styles.headerIcon} />
             <Text style={styles.title}>Sign Up</Text>
             <Text style={styles.description}>Create your account</Text>
           </View>
 
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
-              <Mail size={20} color="#666" />
+              <Mail size={20} color="#1E90FF" />
               <TextInput
                 placeholder="Email"
                 value={email}
@@ -140,7 +140,7 @@ export default function SignUpPage() {
             </View>
 
             <View style={styles.inputWrapper}>
-              <Lock size={20} color="#666" />
+              <Lock size={20} color="#1E90FF" />
               <TextInput
                 placeholder="Password"
                 value={password}
@@ -151,7 +151,7 @@ export default function SignUpPage() {
             </View>
 
             <View style={styles.inputWrapper}>
-              <User size={20} color="#666" />
+              <User size={20} color="#1E90FF" />
               <TextInput
                 placeholder="First Name"
                 value={firstName}
@@ -161,7 +161,7 @@ export default function SignUpPage() {
             </View>
 
             <View style={styles.inputWrapper}>
-              <User size={20} color="#666" />
+              <User size={20} color="#1E90FF" />
               <TextInput
                 placeholder="Last Name"
                 value={lastName}
@@ -171,7 +171,7 @@ export default function SignUpPage() {
             </View>
 
             <View style={styles.inputWrapper}>
-              <Phone size={20} color="#666" />
+              <Phone size={20} color="#1E90FF" />
               <TextInput
                 placeholder="Phone Number"
                 value={phoneNumber}
@@ -187,7 +187,7 @@ export default function SignUpPage() {
             <Switch
               value={isAdmin}
               onValueChange={setIsAdmin}
-              trackColor={{false: '#767577', true: '#81b0ff'}}
+              trackColor={{false: '#767577', true: '#1E90FF'}}
             />
           </View>
 
@@ -196,7 +196,7 @@ export default function SignUpPage() {
             <Switch
               value={isProvider}
               onValueChange={setIsProvider}
-              trackColor={{false: '#767577', true: '#81b0ff'}}
+              trackColor={{false: '#767577', true: '#1E90FF'}}
             />
           </View>
 
@@ -255,6 +255,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
+    color: '#1E90FF',
   },
   description: {
     fontSize: 16,
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#1E90FF',
     borderRadius: 8,
     paddingHorizontal: 12,
   },
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#1E90FF',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   linkText: {
-    color: '#007AFF',
+    color: '#1E90FF',
     fontSize: 14,
   },
 });

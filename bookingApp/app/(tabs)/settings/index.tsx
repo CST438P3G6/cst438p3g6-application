@@ -197,6 +197,7 @@ const SettingsPage: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#E6F7FF', // Light blue background
   },
   content: {
     padding: 20,
@@ -207,11 +208,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#ffffff', // White card background
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
   cardHeader: {
@@ -229,6 +229,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 16,
+    color: '#333333', // Dark text color
   },
   switchContainer: {
     flexDirection: 'row',
